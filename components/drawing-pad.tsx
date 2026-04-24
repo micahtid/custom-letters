@@ -189,15 +189,37 @@ function zhangSuenThin(mask: Uint8Array, width: number, height: number): Uint8Ar
 }
 
 function getTargetInkHeight(label: string) {
-  if (label === ".") {
+  if (label === "." || label === "'" || label === "\"") {
     return 24;
   }
 
-  if (label === "?" || label === "!" || /\d/.test(label) || label === label.toUpperCase()) {
+  if (label === ",") {
+    return 32;
+  }
+
+  if (label === "-") {
+    return 16;
+  }
+
+  if (label === ":" || label === ";") {
+    return 64;
+  }
+
+  if (label === "?" || label === "!" || label === "(" || label === ")" || label === "&" || /\d/.test(label) || label === label.toUpperCase()) {
     return 112;
   }
 
   return 92;
+}
+
+function getTargetTopOffset(label: string, targetInkHeight: number) {
+  if (label === "'" || label === "\"") {
+    return 20; // High up
+  }
+  if (label === "-") {
+    return (NORMALIZED_HEIGHT / 2) - (targetInkHeight / 2); // Middle
+  }
+  return NORMALIZED_HEIGHT - BOTTOM_PADDING - targetInkHeight; // Baseline
 }
 
 export function DrawingPad({ label, onSave }: DrawingPadProps) {
@@ -336,9 +358,13 @@ export function DrawingPad({ label, onSave }: DrawingPadProps) {
 
     const targetInkHeight = getTargetInkHeight(label);
     const scale = targetInkHeight / cropHeight;
+
+    const isPunctuation = [".", "?", "!", ",", "'", "\"", "-", ":", ";", "(", ")", "&"].includes(label);
+    const extraSidePadding = isPunctuation ? 12 : 0;
+
     const outputWidth = Math.max(
       1,
-      Math.round(cropWidth * scale) + SIDE_PADDING * 2
+      Math.round(cropWidth * scale) + (SIDE_PADDING + extraSidePadding) * 2
     );
     const outputCanvas = document.createElement("canvas");
     outputCanvas.width = outputWidth;
@@ -358,9 +384,9 @@ export function DrawingPad({ label, onSave }: DrawingPadProps) {
       0,
       cropWidth,
       cropHeight,
-      SIDE_PADDING,
-      NORMALIZED_HEIGHT - BOTTOM_PADDING - targetInkHeight,
-      outputWidth - SIDE_PADDING * 2,
+      SIDE_PADDING + extraSidePadding,
+      getTargetTopOffset(label, targetInkHeight),
+      outputWidth - (SIDE_PADDING + extraSidePadding) * 2,
       targetInkHeight
     );
 

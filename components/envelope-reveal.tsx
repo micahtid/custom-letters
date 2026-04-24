@@ -76,7 +76,6 @@ export function EnvelopeReveal({ letter }: EnvelopeRevealProps) {
   return (
     <main className={`reveal-page ${opened ? "opened" : ""}`}>
       <div className="reveal-copy">
-        <p className="eyebrow">Paper Thread</p>
         <h1>{letter.title || "A handwritten note is waiting."}</h1>
         <p>
           Shared on {createdLabel}. Open the envelope when you are ready to

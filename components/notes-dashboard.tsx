@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CHARACTERS } from "@/lib/alphabet";
 import type { Note, Profile } from "@/lib/types";
 
 type NotesDashboardProps = {
@@ -35,19 +36,34 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
     router.push(`/notes/${data.note.id}`);
   };
 
+  const handleShare = async (noteId: string) => {
+    const response = await fetch(`/api/notes/${noteId}/share`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profileId: profile.id })
+    });
+
+    if (response.ok) {
+      const data = (await response.json()) as { note: Note };
+      setNotes((prev) =>
+        prev.map((n) => (n.id === data.note.id ? data.note : n))
+      );
+    }
+  };
+
   return (
     <main className="page-shell">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Paper Thread</p>
-          <h1>Your notes</h1>
+          <h1>Your Notes</h1>
           <p className="muted-copy">
             Open a draft, keep writing, or make a new note.
           </p>
         </div>
         <div className="header-actions">
           <Link href="/characters" className="ghost-link">
-            Edit character set
+            Edit Character Set ({Object.keys(profile.glyphs).length}/
+            {CHARACTERS.length})
           </Link>
           <button
             type="button"
@@ -61,15 +77,6 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
       </header>
 
       <section className="notes-grid">
-        <div className="panel compact-panel">
-          <p className="eyebrow">Character set</p>
-          <h2>{Object.keys(profile.glyphs).length} saved characters</h2>
-          <p className="muted-copy">
-            Your notes will use your current saved handwriting whenever you
-            create a share link.
-          </p>
-        </div>
-
         {loading ? (
           <div className="loader-container">
             <div className="loader" />
@@ -87,32 +94,42 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
               <article key={note.id} className="panel note-card">
                 <div className="panel-row">
                   <div>
-                    <p className="eyebrow">Updated</p>
+                    <p className="eyebrow">
+                      Last Edited{" "}
+                      {new Intl.DateTimeFormat("en-US", {
+                        month: "short",
+                        day: "numeric"
+                      }).format(new Date(note.updatedAt))}
+                    </p>
                     <h2>{note.title}</h2>
                   </div>
-                  <span className="timestamp">
-                    {new Intl.DateTimeFormat("en-US", {
-                      month: "short",
-                      day: "numeric"
-                    }).format(new Date(note.updatedAt))}
-                  </span>
                 </div>
 
                 <p className="note-snippet">
                   {note.message.trim() || "No message yet."}
                 </p>
 
-                <div className="panel-row">
-                  <Link href={`/notes/${note.id}`} className="ghost-link">
-                    Open
-                  </Link>
+                <div className="panel-row" style={{ justifyContent: "space-between", marginTop: "auto" }}>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <Link href={`/notes/${note.id}`} className="ghost-link">
+                      Edit
+                    </Link>
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleShare(note.id);
+                      }}
+                    >
+                      Share
+                    </button>
+                  </div>
                   {note.lastSharedLetterId ? (
                     <Link href={`/l/${note.lastSharedLetterId}`} className="text-link">
                       Last shared note
                     </Link>
-                  ) : (
-                    <span className="timestamp">Not shared yet</span>
-                  )}
+                  ) : null}
                 </div>
               </article>
             );

@@ -104,7 +104,6 @@ export function GlyphStudio() {
     <main className="studio-shell">
       <section className="hero-panel">
         <div className="hero-copy">
-          <p className="eyebrow">Paper Thread</p>
           <h1>Write once. Send in your own hand.</h1>
           <p className="lede">
             Capture your alphabet and numbers, then type a note that assembles

@@ -61,8 +61,8 @@ with sync_playwright() as playwright:
     save_glyph(page, "?")
     save_glyph(page, "!")
 
-    page.get_by_role("link", name="Back to notes").click()
-    page.get_by_role("heading", name="Your notes").wait_for()
+    page.get_by_role("link", name="Back").click()
+    page.get_by_role("heading", name="Your Notes").wait_for()
     page.get_by_role("button", name="New note").click()
 
     page.locator('input[placeholder="Untitled note"]').fill("April note")
@@ -72,8 +72,8 @@ with sync_playwright() as playwright:
     share_input.wait_for()
     share_url = share_input.input_value()
 
-    page.get_by_role("link", name="Back to notes").click()
-    page.get_by_role("heading", name="Your notes").wait_for()
+    page.get_by_role("link", name="Back").click()
+    page.get_by_role("heading", name="Your Notes").wait_for()
     page.screenshot(path=str(Path("artifacts") / "dashboard.png"), full_page=True)
 
     recipient = browser.new_page(viewport={"width": 1440, "height": 1400})

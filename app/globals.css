@@ -51,9 +51,9 @@
   --radius-full: 999px;
 
   /* Shadows */
-  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-strong: 0 12px 32px rgba(0, 0, 0, 0.16);
+  --shadow-subtle: none;
+  --shadow-soft: none;
+  --shadow-strong: none;
 
   /* Legacy variable mapping for compatibility */
   --bg: var(--bg-subtle);
@@ -204,11 +204,12 @@ h2 {
 
 .page-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 40px;
   padding-bottom: var(--p-xl);
   border-bottom: 1px solid var(--line);
+  gap: 24px;
 }
 
 .header-actions,
@@ -239,16 +240,15 @@ h2 {
   border-radius: var(--radius-xl);
   border: 1px solid var(--line);
   box-shadow: var(--shadow-subtle);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
   gap: var(--gap-md);
-  cursor: pointer;
+  cursor: default;
+  min-height: 200px;
 }
 
 .note-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-soft);
   border-color: var(--line-strong);
 }
 
@@ -482,7 +482,6 @@ h2 {
 .primary-button:hover,
 .primary-link:hover {
   background: var(--accent-muted);
-  transform: scale(1.02);
 }
 
 .ghost-button,
@@ -498,10 +497,21 @@ h2 {
   border-color: var(--line-strong);
 }
 
+.back-button {
+  width: 40px;
+  padding: 0 !important;
+  flex-shrink: 0;
+}
+
+.back-button svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* Status & Pills */
 .status-pill {
   padding: 4px 10px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
   text-transform: uppercase;
@@ -806,10 +816,27 @@ h2 {
 }
 
 .title-area {
-  flex: 1;
+  display: inline-grid;
+  align-items: center;
+  gap: 8px;
+  grid-template-columns: min-content min-content;
+}
+
+.title-area::before {
+  content: attr(data-value);
+  grid-area: 1 / 1;
+  visibility: hidden;
+  white-space: pre;
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  font-family: var(--font-body), sans-serif;
+  padding: 0;
+  /* Add a tiny bit of extra width to prevent jitter */
+  margin-right: 2px;
 }
 
 .title-input-minimal {
+  grid-area: 1 / 1;
   background: transparent;
   border: none;
   font-size: var(--fs-2xl);
@@ -819,6 +846,11 @@ h2 {
   padding: 0;
   outline: none;
   font-family: var(--font-body), sans-serif;
+}
+
+.title-area .status-pill {
+  grid-area: 1 / 2;
+  white-space: nowrap;
 }
 
 .title-input-minimal::placeholder {
@@ -834,7 +866,6 @@ h2 {
 }
 
 .paper-editor-wrapper {
-  position: relative;
   width: 100%;
   min-height: 500px;
   background: var(--bg-default);
@@ -844,46 +875,58 @@ h2 {
   padding: 40px;
 }
 
-.paper-textarea-overlay {
-  position: relative;
+.glyph-editor {
   width: 100%;
   min-height: 420px;
-  background: transparent;
-  border: none;
-  padding: 0;
-  resize: none;
-  font-family: var(--font-body), sans-serif;
-  font-size: 1.45rem; /* Match fallback-char size */
-  line-height: 40px; /* Match hand-line min-height */
-  color: transparent;
-  caret-color: var(--text-primary);
-  z-index: 2;
   outline: none;
-  white-space: pre-wrap;
-  overflow: hidden;
+  font-family: var(--font-body), sans-serif;
+  font-size: 1.45rem;
+  line-height: 44px;
+  color: var(--text-primary);
+  caret-color: var(--text-primary);
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
-.paper-textarea-overlay::placeholder {
+.glyph-editor:empty::before {
+  content: attr(data-placeholder);
   color: var(--text-secondary);
   opacity: 0.3;
-}
-
-.paper-preview-underlay {
-  position: absolute;
-  top: 40px;
-  left: 40px;
-  right: 40px;
-  z-index: 1;
   pointer-events: none;
 }
 
-/* Ensure paper-sheet inside underlay is transparent and unstyled since wrapper handles it */
-.paper-preview-underlay .paper-sheet {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  min-height: auto;
+.glyph-editor .glyph-image {
+  display: inline-block;
+  height: 44px;
+  width: auto;
+  vertical-align: bottom;
+  user-select: text;
+  -webkit-user-drag: none;
+}
+
+.glyph-editor .fallback-char {
+  display: inline-block;
+  font-family: var(--font-body), sans-serif;
+  font-size: 1.45rem;
+  line-height: 44px;
+  vertical-align: bottom;
+  min-height: 44px;
+}
+
+.glyph-editor .glyph-space {
+  display: inline-block;
+  width: 16px;
+  height: 44px;
+  vertical-align: bottom;
+  white-space: pre;
+}
+
+.glyph-editor .glyph-image + .glyph-image,
+.glyph-editor .glyph-image + .fallback-char,
+.glyph-editor .fallback-char + .glyph-image,
+.glyph-editor .fallback-char + .fallback-char {
+  margin-left: -6px;
 }
 
 /* Character Manager Redesign */

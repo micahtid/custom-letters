@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowBigLeft } from "lucide-react";
 import { CHARACTERS } from "@/lib/alphabet";
 import { DrawingPad } from "@/components/drawing-pad";
 import { useProfile } from "@/hooks/use-profile";
@@ -13,7 +14,7 @@ const GROUPS = [
   { label: "Uppercase", chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("") },
   { label: "Lowercase", chars: "abcdefghijklmnopqrstuvwxyz".split("") },
   { label: "Numbers", chars: "0123456789".split("") },
-  { label: "Symbols", chars: [".", "?", "!"] }
+  { label: "Symbols", chars: [".", "?", "!", ",", "'", "\"", "-", ":", ";", "(", ")", "&"] }
 ];
 
 export function CharacterSetManager() {
@@ -127,8 +128,8 @@ export function CharacterSetManager() {
           >
             Restart
           </button>
-          <Link href="/" className="ghost-link">
-            Back
+          <Link href="/" className="ghost-link back-button" aria-label="Back">
+            <ArrowBigLeft />
           </Link>
         </div>
       </header>

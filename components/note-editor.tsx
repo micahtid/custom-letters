@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ArrowBigLeft } from "lucide-react";
 import type { Note } from "@/lib/types";
-import { MessagePreview } from "@/components/message-preview";
+import { GlyphEditor } from "@/components/glyph-editor";
 import { useProfile } from "@/hooks/use-profile";
 
 type NoteEditorProps = {
@@ -22,8 +23,6 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   const [draftMessage, setDraftMessage] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [shareUrl, setShareUrl] = useState("");
-  
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!profile) {
@@ -147,10 +146,9 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     return (
       <main className="simple-shell">
         <section className="empty-state">
-          <p className="eyebrow">Paper Thread</p>
           <h1>Note not found.</h1>
-          <Link href="/" className="ghost-link">
-            Back
+          <Link href="/" className="ghost-link back-button" aria-label="Back">
+            <ArrowBigLeft />
           </Link>
         </section>
       </main>
@@ -160,15 +158,13 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   return (
     <main className="page-shell note-editor-page">
       <header className="page-header">
-        <div className="title-area">
+        <div className="title-area" data-value={draftTitle || "Untitled note"}>
           <input
             className="title-input-minimal"
             value={draftTitle}
             onChange={(e) => setDraftTitle(e.target.value)}
             placeholder="Untitled note"
           />
-        </div>
-        <div className="header-actions">
           <span className={`status-pill status-${saveState}`}>
             {saveState === "idle"
               ? dirty
@@ -180,31 +176,28 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
                   ? "Saved"
                   : "Retry"}
           </span>
+        </div>
+        <div className="header-actions">
           <button type="button" className="ghost-button" onClick={saveNote}>
             Save
           </button>
           <button type="button" className="primary-button" onClick={shareNote}>
             Create Link
           </button>
-          <Link href="/" className="ghost-link">
-            Back
+          <Link href="/" className="ghost-link back-button" aria-label="Back">
+            <ArrowBigLeft />
           </Link>
         </div>
       </header>
 
       <section className="direct-editor-container">
         <div className="paper-editor-wrapper">
-          <textarea
-            ref={textareaRef}
-            className="paper-textarea-overlay"
+          <GlyphEditor
+            glyphs={profile.glyphs}
             value={draftMessage}
-            onChange={(e) => setDraftMessage(e.target.value)}
+            onChange={setDraftMessage}
             placeholder="Write your note here..."
-            spellCheck={false}
           />
-          <div className="paper-preview-underlay">
-            <MessagePreview glyphs={profile.glyphs} message={draftMessage} />
-          </div>
         </div>
 
         {shareUrl ? (

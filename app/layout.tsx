@@ -13,8 +13,8 @@ const body = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "Paper Thread",
-  description: "Turn your handwriting into shareable letters."
+  title: "Handwritten Letters",
+  description: "Turn your handwriting into shareable letters.",
 };
 
 export default function RootLayout({

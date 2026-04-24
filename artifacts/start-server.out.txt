@@ -1,0 +1,14 @@
+
+> handwritten-letters@0.1.0 prestart
+> node scripts/ensure-build-id.mjs
+
+
+> handwritten-letters@0.1.0 start
+> next start --hostname 127.0.0.1 --port 3133
+
+   ▲ Next.js 15.5.15
+   - Local:        http://127.0.0.1:3133
+   - Network:      http://127.0.0.1:3133
+
+ ✓ Starting...
+ ✓ Ready in 1887ms

@@ -18,10 +18,9 @@ export function HomeGate() {
   if (loading || !profile) {
     return (
       <main className="simple-shell">
-        <section className="empty-state">
-          <p className="eyebrow">Paper Thread</p>
-          <h1>Loading your workspace.</h1>
-        </section>
+        <div className="loader-container">
+          <div className="loader" />
+        </div>
       </main>
     );
   }
@@ -29,10 +28,9 @@ export function HomeGate() {
   if (Object.keys(profile.glyphs).length === 0) {
     return (
       <main className="simple-shell">
-        <section className="empty-state">
-          <p className="eyebrow">Paper Thread</p>
-          <h1>Setting up your character set.</h1>
-        </section>
+        <div className="loader-container">
+          <div className="loader" />
+        </div>
       </main>
     );
   }

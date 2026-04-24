@@ -71,8 +71,8 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
         </div>
 
         {loading ? (
-          <div className="panel empty-panel">
-            <p>Loading notes.</p>
+          <div className="loader-container">
+            <div className="loader" />
           </div>
         ) : notes.length === 0 ? (
           <div className="panel empty-panel">

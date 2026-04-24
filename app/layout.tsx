@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bodoni_Moda, Instrument_Sans } from "next/font/google";
+import { Bodoni_Moda, Sora } from "next/font/google";
 import "./globals.css";
 
 const display = Bodoni_Moda({
@@ -7,7 +7,7 @@ const display = Bodoni_Moda({
   variable: "--font-display"
 });
 
-const body = Instrument_Sans({
+const body = Sora({
   subsets: ["latin"],
   variable: "--font-body"
 });
@@ -23,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
-      <body>{children}</body>
+    <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

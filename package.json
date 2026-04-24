@@ -1,0 +1,29 @@
+{
+  "name": "handwritten-letters",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "predev": "node scripts/clean-next.mjs",
+    "dev": "next dev",
+    "prebuild": "node scripts/clean-next.mjs",
+    "build": "next build",
+    "postbuild": "node scripts/ensure-build-id.mjs",
+    "prestart": "node scripts/ensure-build-id.mjs",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "next": "^15.3.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "eslint": "^9.25.0",
+    "eslint-config-next": "^15.3.1",
+    "typescript": "^5.8.3"
+  }
+}

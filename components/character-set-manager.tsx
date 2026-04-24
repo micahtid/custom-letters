@@ -9,6 +9,13 @@ import { useProfile } from "@/hooks/use-profile";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
+const GROUPS = [
+  { label: "Uppercase", chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("") },
+  { label: "Lowercase", chars: "abcdefghijklmnopqrstuvwxyz".split("") },
+  { label: "Numbers", chars: "0123456789".split("") },
+  { label: "Symbols", chars: [".", "?", "!"] }
+];
+
 export function CharacterSetManager() {
   const { profile, loading, setProfile } = useProfile();
   const [activeChar, setActiveChar] = useState(CHARACTERS[0]);
@@ -95,20 +102,18 @@ export function CharacterSetManager() {
   if (loading || !profile) {
     return (
       <main className="simple-shell">
-        <section className="empty-state">
-          <p className="eyebrow">Paper Thread</p>
-          <h1>Loading your character set.</h1>
-        </section>
+        <div className="loader-container">
+          <div className="loader" />
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="page-shell">
+    <main className="page-shell character-manager-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Character Set</p>
-          <h1>Your handwriting library</h1>
+          <h1>Character Set</h1>
         </div>
         <div className="header-actions">
           <span className="subtle-stat">
@@ -123,73 +128,53 @@ export function CharacterSetManager() {
             Restart
           </button>
           <Link href="/" className="ghost-link">
-            Back to notes
+            Back
           </Link>
         </div>
       </header>
 
-      <section className="single-column-layout">
-        <div className="panel">
-          <div className="panel-row">
-            <div>
-              <p className="eyebrow">Current character</p>
-              <h2>{activeChar}</h2>
-            </div>
-            <div className="panel-row">
-              <span className={`status-pill status-${saveState}`}>
-                {saveState === "idle"
-                  ? "Ready"
-                  : saveState === "saving"
-                    ? "Saving"
-                    : saveState === "saved"
-                      ? "Saved"
-                      : "Retry"}
-              </span>
-              <div className="saved-swatch">
-                {activePreview ? (
-                  <Image
-                    src={activePreview}
-                    alt={`Saved ${activeChar}`}
-                    width={72}
-                    height={72}
-                    unoptimized
-                  />
-                ) : (
-                  <span>Empty</span>
-                )}
-              </div>
+      <div className="manager-content">
+        <section className="drawing-section">
+          <div className="active-character-card">
+            <div className="drawing-pad-container">
+              <DrawingPad
+                key={padVersion}
+                label={activeChar}
+                onSave={saveGlyph}
+              />
             </div>
           </div>
+        </section>
 
-          <DrawingPad
-            key={padVersion}
-            label={activeChar}
-            onSave={saveGlyph}
-          />
-        </div>
+        <section className="character-grid-section">
+          {GROUPS.map((group) => (
+            <div key={group.label} className="group-row">
+              <h3 className="group-label">{group.label}</h3>
+              <div className="character-grid">
+                {group.chars.map((character) => {
+                  const saved = Boolean(profile.glyphs[character]);
 
-        <div className="character-grid" aria-label="Character picker">
-          {CHARACTERS.map((character) => {
-            const saved = Boolean(profile.glyphs[character]);
-
-            return (
-              <button
-                key={character}
-                type="button"
-                className={`character-chip ${
-                  character === activeChar ? "active" : ""
-                } ${saved ? "saved" : ""}`}
-                onClick={() => {
-                  setActiveChar(character);
-                  setPadVersion((value) => value + 1);
-                }}
-              >
-                {character}
-              </button>
-            );
-          })}
-        </div>
-      </section>
+                  return (
+                    <button
+                      key={character}
+                      type="button"
+                      className={`character-chip ${
+                        character === activeChar ? "active" : ""
+                      } ${saved ? "saved" : ""}`}
+                      onClick={() => {
+                        setActiveChar(character);
+                        setPadVersion((value) => value + 1);
+                      }}
+                    >
+                      {character}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </section>
+      </div>
     </main>
   );
 }

@@ -7,8 +7,8 @@ type DrawingPadProps = {
   onSave: (dataUrl: string) => void | Promise<void>;
 };
 
-const BACKGROUND = { r: 253, g: 250, b: 242 };
-const BACKGROUND_FILL = "#fdfaf2";
+const BACKGROUND = { r: 255, g: 255, b: 255 };
+const BACKGROUND_FILL = "#ffffff";
 const STROKE_FILL = "#1e1a17";
 const TRIM_PADDING = 10;
 const COLOR_THRESHOLD = 24;
@@ -472,7 +472,7 @@ export function DrawingPad({ label, onSave }: DrawingPadProps) {
     context.fillStyle = BACKGROUND_FILL;
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.strokeStyle = STROKE_FILL;
-    context.lineWidth = 5;
+    context.lineWidth = 8;
     context.lineCap = "round";
     context.lineJoin = "round";
   }, [label]);
@@ -540,16 +540,13 @@ export function DrawingPad({ label, onSave }: DrawingPadProps) {
       <canvas
         ref={canvasRef}
         width={420}
-        height={240}
+        height={400}
         onPointerDown={start}
         onPointerMove={move}
         onPointerUp={stop}
         onPointerLeave={stop}
       />
       <div className="drawing-actions">
-        <button type="button" className="ghost-button" onClick={clear}>
-          Clear
-        </button>
         <button
           type="button"
           className="primary-button"
@@ -565,6 +562,9 @@ export function DrawingPad({ label, onSave }: DrawingPadProps) {
           }}
         >
           Save {label}
+        </button>
+        <button type="button" className="ghost-button" onClick={clear}>
+          Clear
         </button>
       </div>
     </div>

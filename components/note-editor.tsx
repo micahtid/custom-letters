@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Note } from "@/lib/types";
 import { MessagePreview } from "@/components/message-preview";
@@ -22,6 +22,8 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   const [draftMessage, setDraftMessage] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [shareUrl, setShareUrl] = useState("");
+  
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!profile) {
@@ -134,10 +136,9 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   if (loading || !profile || noteLoading) {
     return (
       <main className="simple-shell">
-        <section className="empty-state">
-          <p className="eyebrow">Paper Thread</p>
-          <h1>Loading note.</h1>
-        </section>
+        <div className="loader-container">
+          <div className="loader" />
+        </div>
       </main>
     );
   }
@@ -149,7 +150,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
           <p className="eyebrow">Paper Thread</p>
           <h1>Note not found.</h1>
           <Link href="/" className="ghost-link">
-            Back to notes
+            Back
           </Link>
         </section>
       </main>
@@ -157,11 +158,15 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   }
 
   return (
-    <main className="page-shell">
+    <main className="page-shell note-editor-page">
       <header className="page-header">
-        <div>
-          <p className="eyebrow">Note</p>
-          <h1>{note.title}</h1>
+        <div className="title-area">
+          <input
+            className="title-input-minimal"
+            value={draftTitle}
+            onChange={(e) => setDraftTitle(e.target.value)}
+            placeholder="Untitled note"
+          />
         </div>
         <div className="header-actions">
           <span className={`status-pill status-${saveState}`}>
@@ -175,62 +180,48 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
                   ? "Saved"
                   : "Retry"}
           </span>
+          <button type="button" className="ghost-button" onClick={saveNote}>
+            Save
+          </button>
+          <button type="button" className="primary-button" onClick={shareNote}>
+            Create Link
+          </button>
           <Link href="/" className="ghost-link">
-            Back to notes
+            Back
           </Link>
         </div>
       </header>
 
-      <section className="editor-layout">
-        <div className="panel">
-          <label className="field-block">
-            <span className="field-label">Title</span>
-            <input
-              value={draftTitle}
-              onChange={(event) => setDraftTitle(event.target.value)}
-              placeholder="Untitled note"
-            />
-          </label>
-
-          <label className="field-block">
-            <span className="field-label">Message</span>
-            <textarea
-              value={draftMessage}
-              onChange={(event) => setDraftMessage(event.target.value)}
-              placeholder="Write your note here."
-            />
-          </label>
-
-          <div className="header-actions">
-            <button type="button" className="ghost-button" onClick={saveNote}>
-              Save draft
-            </button>
-            <button type="button" className="primary-button" onClick={shareNote}>
-              Save and create link
-            </button>
+      <section className="direct-editor-container">
+        <div className="paper-editor-wrapper">
+          <textarea
+            ref={textareaRef}
+            className="paper-textarea-overlay"
+            value={draftMessage}
+            onChange={(e) => setDraftMessage(e.target.value)}
+            placeholder="Write your note here..."
+            spellCheck={false}
+          />
+          <div className="paper-preview-underlay">
+            <MessagePreview glyphs={profile.glyphs} message={draftMessage} />
           </div>
+        </div>
 
-          {shareUrl ? (
-            <div className="share-card">
-              <span className="field-label">Share link</span>
-              <div className="share-row">
-                <input readOnly value={shareUrl} />
-                <button
-                  type="button"
-                  className="ghost-button"
-                  onClick={() => navigator.clipboard.writeText(shareUrl)}
-                >
-                  Copy
-                </button>
-              </div>
+        {shareUrl ? (
+          <div className="share-card">
+            <span className="field-label">Share link</span>
+            <div className="share-row">
+              <input readOnly value={shareUrl} />
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={() => navigator.clipboard.writeText(shareUrl)}
+              >
+                Copy
+              </button>
             </div>
-          ) : null}
-        </div>
-
-        <div className="panel preview-panel">
-          <p className="eyebrow">Preview</p>
-          <MessagePreview glyphs={profile.glyphs} message={draftMessage} />
-        </div>
+          </div>
+        ) : null}
       </section>
     </main>
   );

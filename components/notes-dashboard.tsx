@@ -76,42 +76,43 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
         </div>
       </header>
 
-      <section className="notes-grid">
-        {loading ? (
-          <div className="loader-container">
-            <div className="loader" />
-          </div>
-        ) : notes.length === 0 ? (
-          <div className="panel empty-panel">
-            <h2>No notes yet.</h2>
-            <p className="muted-copy">
-              Start one and it will stay here while you keep working on it.
-            </p>
-          </div>
-        ) : (
-          notes.map((note) => {
+      {loading ? (
+        <div className="loader-container">
+          <div className="loader" />
+        </div>
+      ) : notes.length === 0 ? (
+        <div className="empty-dashboard">
+          <h2>No notes yet.</h2>
+          <p className="muted-copy">
+            Start one and it will stay here while you keep working on it.
+          </p>
+        </div>
+      ) : (
+        <section className="notes-grid">
+          {notes.map((note) => {
             return (
               <article key={note.id} className="panel note-card">
-                <div className="panel-row">
-                  <div>
-                    <p className="eyebrow">
-                      Last Edited{" "}
-                      {new Intl.DateTimeFormat("en-US", {
-                        month: "short",
-                        day: "numeric"
-                      }).format(new Date(note.updatedAt))}
-                    </p>
-                    <h2>{note.title}</h2>
-                  </div>
+                <div className="note-card-body">
+                  <p className="note-date">
+                    Last Edited{" "}
+                    {new Intl.DateTimeFormat("en-US", {
+                      month: "short",
+                      day: "numeric"
+                    }).format(new Date(note.updatedAt))}
+                  </p>
+                  <h2>{note.title}</h2>
+                  <p className="note-snippet">
+                    {note.message.trim() || "No message yet."}
+                  </p>
                 </div>
-
-                <p className="note-snippet">
-                  {note.message.trim() || "No message yet."}
-                </p>
 
                 <div className="panel-row" style={{ justifyContent: "space-between", marginTop: "auto" }}>
                   <div style={{ display: "flex", gap: "8px" }}>
-                    <Link href={`/notes/${note.id}`} className="ghost-link">
+                    <Link 
+                      href={`/notes/${note.id}`} 
+                      className="ghost-link"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       Edit
                     </Link>
                     <button
@@ -126,16 +127,20 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
                     </button>
                   </div>
                   {note.lastSharedLetterId ? (
-                    <Link href={`/l/${note.lastSharedLetterId}`} className="text-link">
+                    <Link 
+                      href={`/l/${note.lastSharedLetterId}`} 
+                      className="text-link"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       Last shared note
                     </Link>
                   ) : null}
                 </div>
               </article>
             );
-          })
-        )}
-      </section>
+          })}
+        </section>
+      )}
     </main>
   );
 }

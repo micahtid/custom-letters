@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
-import type { DataStore, Note, Profile, StoredLetter } from "./types";
+import type { Attachment, DataStore, Note, PaperStyle, Profile, StoredLetter } from "./types";
 
 const dataDirectory = path.join(process.cwd(), "data");
 const dataFile = path.join(dataDirectory, "store.json");
@@ -30,6 +30,9 @@ function normalizeStore(input: Partial<DataStore> | null | undefined): DataStore
           title: letter.title ?? "Shared note",
           message: letter.message ?? "",
           glyphs: letter.glyphs ?? {},
+          paperStyle: letter.paperStyle ?? "plain",
+          paperColor: letter.paperColor ?? "#ffffff",
+          attachments: letter.attachments ?? [],
           createdAt: letter.createdAt ?? new Date().toISOString()
         } satisfies StoredLetter
       ];
@@ -174,7 +177,11 @@ export async function updateNote(
   return note;
 }
 
-export async function shareNote(profileId: string, noteId: string) {
+export async function shareNote(
+  profileId: string,
+  noteId: string,
+  options: { paperStyle?: PaperStyle; paperColor?: string; attachments?: Attachment[] } = {}
+) {
   const store = await readStore();
   const profile = store.profiles[profileId];
   const note = store.notes[noteId];
@@ -194,6 +201,9 @@ export async function shareNote(profileId: string, noteId: string) {
     title: note.title,
     message: note.message,
     glyphs: profile.glyphs,
+    paperStyle: options.paperStyle ?? "plain",
+    paperColor: options.paperColor ?? "#ffffff",
+    attachments: options.attachments ?? [],
     createdAt: new Date().toISOString()
   };
 

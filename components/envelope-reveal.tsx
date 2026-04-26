@@ -105,6 +105,9 @@ export function EnvelopeReveal({ letter }: EnvelopeRevealProps) {
               <MessagePreview
                 glyphs={letter.glyphs}
                 message={letter.message}
+                paperStyle={letter.paperStyle}
+                paperColor={letter.paperColor}
+                attachments={letter.attachments}
               />
             </div>
           </div>

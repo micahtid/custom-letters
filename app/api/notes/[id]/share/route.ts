@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
 import { shareNote } from "@/lib/store";
+import type { Attachment, PaperStyle } from "@/lib/types";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
 export async function POST(request: Request, context: RouteContext) {
-  const body = (await request.json()) as { profileId?: string };
+  const body = (await request.json()) as {
+    profileId?: string;
+    paperStyle?: PaperStyle;
+    paperColor?: string;
+    attachments?: Attachment[];
+  };
   const { id } = await context.params;
 
   if (!body.profileId) {
@@ -17,7 +23,11 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   try {
-    const result = await shareNote(body.profileId, id);
+    const result = await shareNote(body.profileId, id, {
+      paperStyle: body.paperStyle,
+      paperColor: body.paperColor,
+      attachments: body.attachments
+    });
     return NextResponse.json(result);
   } catch {
     return NextResponse.json({ error: "Unable to share note." }, { status: 404 });

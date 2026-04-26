@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowBigLeft } from "lucide-react";
 import { CHARACTERS } from "@/lib/alphabet";
@@ -21,6 +20,7 @@ export function CharacterSetManager() {
   const { profile, loading, setProfile } = useProfile();
   const [activeChar, setActiveChar] = useState(CHARACTERS[0]);
   const [padVersion, setPadVersion] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [saveState, setSaveState] = useState<SaveState>("idle");
 
   const completed = useMemo(() => {
@@ -30,8 +30,6 @@ export function CharacterSetManager() {
 
     return CHARACTERS.filter((character) => profile.glyphs[character]).length;
   }, [profile]);
-
-  const activePreview = profile?.glyphs[activeChar]?.dataUrl ?? null;
 
   const restartCharacterSet = async () => {
     if (!profile) {

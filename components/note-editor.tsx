@@ -22,7 +22,6 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   const [draftTitle, setDraftTitle] = useState("");
   const [draftMessage, setDraftMessage] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
     if (!profile) {
@@ -45,19 +44,9 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
       setDraftTitle(data.note.title);
       setDraftMessage(data.note.message);
 
-      if (data.note.lastSharedLetterId) {
-        setShareUrl(`${window.location.origin}/l/${data.note.lastSharedLetterId}`);
-      }
-
       setNoteLoading(false);
     })();
   }, [noteId, profile]);
-
-  useEffect(() => {
-    if (!loading && profile && Object.keys(profile.glyphs).length === 0) {
-      router.replace("/characters");
-    }
-  }, [loading, profile, router]);
 
   const dirty = useMemo(() => {
     if (!note) {
@@ -102,36 +91,6 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     }
   };
 
-  const shareNote = async () => {
-    if (!profile || !note) {
-      return;
-    }
-
-    const latestNote = dirty ? await saveNote() : note;
-
-    if (!latestNote) {
-      return;
-    }
-
-    const response = await fetch(`/api/notes/${latestNote.id}/share`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profileId: profile.id })
-    });
-
-    if (!response.ok) {
-      setSaveState("error");
-      return;
-    }
-
-    const data = (await response.json()) as {
-      note: Note;
-      letter: { id: string };
-    };
-    setNote(data.note);
-    setShareUrl(`${window.location.origin}/l/${data.letter.id}`);
-  };
-
   if (loading || !profile || noteLoading) {
     return (
       <main className="simple-shell">
@@ -165,24 +124,18 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
             onChange={(e) => setDraftTitle(e.target.value)}
             placeholder="Untitled note"
           />
-          <span className={`status-pill status-${saveState}`}>
-            {saveState === "idle"
-              ? dirty
-                ? "Unsaved"
-                : "Saved"
-              : saveState === "saving"
-                ? "Saving"
-                : saveState === "saved"
-                  ? "Saved"
-                  : "Retry"}
-          </span>
         </div>
         <div className="header-actions">
-          <button type="button" className="ghost-button" onClick={saveNote}>
-            Save
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={saveNote}
+            disabled={!dirty || saveState === "saving"}
+          >
+            {saveState === "saving" ? "Saving..." : "Save"}
           </button>
-          <button type="button" className="primary-button" onClick={shareNote}>
-            Create Link
+          <button type="button" className="primary-button" onClick={() => router.push(`/notes/${note.id}/publish`)}>
+            Publish
           </button>
           <Link href="/" className="ghost-link back-button" aria-label="Back">
             <ArrowBigLeft />
@@ -199,22 +152,6 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
             placeholder="Write your note here..."
           />
         </div>
-
-        {shareUrl ? (
-          <div className="share-card">
-            <span className="field-label">Share link</span>
-            <div className="share-row">
-              <input readOnly value={shareUrl} />
-              <button
-                type="button"
-                className="ghost-button"
-                onClick={() => navigator.clipboard.writeText(shareUrl)}
-              >
-                Copy
-              </button>
-            </div>
-          </div>
-        ) : null}
       </section>
     </main>
   );

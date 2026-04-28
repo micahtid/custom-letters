@@ -1,5 +1,5 @@
 {
-  "name": "handwritten-letters",
+  "name": "penned",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -22,7 +22,8 @@
     "lucide-react": "^1.11.0",
     "next": "^15.3.1",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-icons": "^5.6.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",

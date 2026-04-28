@@ -1718,7 +1718,234 @@ h2 {
   border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.share-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Status pills used on dashboard cards and the publish view */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  line-height: 1.4;
+  width: fit-content;
+}
+
+.status-badge--live {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.status-badge--draft {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--line);
+}
+
+.note-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Locked editor while a note is live — readers see, but no edits */
+.direct-editor-container.is-locked {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.title-input-minimal:disabled {
+  background: transparent;
+  color: var(--text-primary);
+  cursor: default;
+  opacity: 0.75;
+}
+
+/* Manage Published Letter modal — opened from the dashboard */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+  animation: modal-fade 0.18s ease-out;
+}
+
+.modal-card {
+  position: relative;
+  animation: modal-pop 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.modal-close:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+@keyframes modal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-pop {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.manage-link-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Square icon-only button — self-contained so cascade from other button
+   classes can't shift the icon off-center. */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin: 0;
+  flex: 0 0 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--bg-default);
+  color: var(--text-primary);
+  font: inherit;
+  line-height: 0;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.icon-button:hover {
+  background: var(--bg-subtle);
+  border-color: var(--line-strong);
+}
+
+.icon-button > svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.icon-button--danger:hover {
+  color: #c1493a;
+  border-color: #c1493a;
+  background: var(--bg-default);
+}
+
+.manage-link-card {
+  width: 100%;
+  max-width: 460px;
+  padding: var(--p-2xl);
+  background: var(--bg-default);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gap-md);
+}
+
+.manage-link-status {
+  align-self: flex-start;
+  margin-bottom: 12px;
+}
+
+.manage-link-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.manage-link-title {
+  margin: 0;
+}
+
+.manage-link-explanation {
+  margin: 0;
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.manage-link-url {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
+  margin-top: 16px;
+}
+
+/* Aesthetic warm-red destructive button */
+.danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 18px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-md);
+  border: 1px solid #c1493a;
+  background: #c1493a;
+  color: #fffaf7;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #a8443a;
+  border-color: #a8443a;
+}
+
+.danger-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.danger-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .view-link {

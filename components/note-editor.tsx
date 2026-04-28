@@ -40,13 +40,21 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
       }
 
       const data = (await response.json()) as { note: Note };
+
+      // Published notes are managed exclusively from the home modal —
+      // redirect away so the editor is never shown for live notes.
+      if (data.note.lastSharedLetterId) {
+        router.replace("/");
+        return;
+      }
+
       setNote(data.note);
       setDraftTitle(data.note.title);
       setDraftMessage(data.note.message);
 
       setNoteLoading(false);
     })();
-  }, [noteId, profile]);
+  }, [noteId, profile, router]);
 
   const dirty = useMemo(() => {
     if (!note) {
@@ -114,6 +122,8 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     );
   }
 
+  const isLive = Boolean(note.lastSharedLetterId);
+
   return (
     <main className="page-shell note-editor-page">
       <header className="page-header">
@@ -123,27 +133,47 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
             value={draftTitle}
             onChange={(e) => setDraftTitle(e.target.value)}
             placeholder="Untitled note"
+            disabled={isLive}
           />
         </div>
         <div className="header-actions">
-          <button
-            type="button"
-            className="ghost-button"
-            onClick={saveNote}
-            disabled={!dirty || saveState === "saving"}
-          >
-            {saveState === "saving" ? "Saving..." : "Save"}
-          </button>
-          <button type="button" className="primary-button" onClick={() => router.push(`/notes/${note.id}/publish`)}>
-            Publish
-          </button>
+          {isLive ? (
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => router.push(`/notes/${note.id}/publish`)}
+            >
+              Manage
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={saveNote}
+                disabled={!dirty || saveState === "saving"}
+              >
+                {saveState === "saving" ? "Saving..." : "Save"}
+              </button>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => router.push(`/notes/${note.id}/publish`)}
+              >
+                Publish
+              </button>
+            </>
+          )}
           <Link href="/" className="ghost-link back-button" aria-label="Back">
             <ArrowBigLeft />
           </Link>
         </div>
       </header>
 
-      <section className="direct-editor-container">
+      <section
+        className={`direct-editor-container${isLive ? " is-locked" : ""}`}
+        aria-disabled={isLive || undefined}
+      >
         <div className="paper-editor-wrapper">
           <GlyphEditor
             glyphs={profile.glyphs}

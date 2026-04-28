@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getNote, updateNote } from "@/lib/store";
+import { deleteNote, getNote, updateNote } from "@/lib/store";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -39,6 +39,25 @@ export async function PATCH(request: Request, context: RouteContext) {
     });
 
     return NextResponse.json({ note });
+  } catch {
+    return NextResponse.json({ error: "Note not found." }, { status: 404 });
+  }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const profileId = request.nextUrl.searchParams.get("profileId");
+  const { id } = await context.params;
+
+  if (!profileId) {
+    return NextResponse.json(
+      { error: "profileId is required." },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await deleteNote(profileId, id);
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Note not found." }, { status: 404 });
   }

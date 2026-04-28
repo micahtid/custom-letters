@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Bodoni_Moda, Sora } from "next/font/google";
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+import ConvexClientProvider from "./ConvexClientProvider";
 import "./globals.css";
 
 const display = Bodoni_Moda({
@@ -14,7 +16,7 @@ const body = Sora({
 
 export const metadata: Metadata = {
   title: "Handwritten Letters",
-  description: "Turn your handwriting into shareable letters.",
+  description: "Turn your handwriting into shareable letters."
 };
 
 export default function RootLayout({
@@ -23,8 +25,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
-      <body suppressHydrationWarning>{children}</body>
-    </html>
+    <ConvexAuthNextjsServerProvider>
+      <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
+        <body suppressHydrationWarning>
+          <ConvexClientProvider>{children}</ConvexClientProvider>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
   );
 }

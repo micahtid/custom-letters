@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowBigLeft } from "lucide-react";
-import type { Note } from "@/lib/types";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { GlyphMap, NoteId } from "@/lib/types";
 import { GlyphEditor } from "@/components/glyph-editor";
-import { useProfile } from "@/hooks/use-profile";
 
 type NoteEditorProps = {
   noteId: string;
@@ -15,91 +16,66 @@ type NoteEditorProps = {
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 export function NoteEditor({ noteId }: NoteEditorProps) {
-  const { profile, loading } = useProfile();
   const router = useRouter();
-  const [note, setNote] = useState<Note | null>(null);
-  const [noteLoading, setNoteLoading] = useState(true);
+  const note = useQuery(api.notes.get, { id: noteId as NoteId });
+  const glyphs = useQuery(api.glyphs.list);
+  const updateNote = useMutation(api.notes.update);
+
   const [draftTitle, setDraftTitle] = useState("");
   const [draftMessage, setDraftMessage] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    if (!profile) {
+    if (note === undefined) return;
+    if (note === null) return;
+
+    if (note.lastSharedLetterId) {
+      router.replace("/");
       return;
     }
 
-    void (async () => {
-      const response = await fetch(
-        `/api/notes/${noteId}?profileId=${profile.id}`
-      );
-
-      if (!response.ok) {
-        setNote(null);
-        setNoteLoading(false);
-        return;
-      }
-
-      const data = (await response.json()) as { note: Note };
-
-      // Published notes are managed exclusively from the home modal —
-      // redirect away so the editor is never shown for live notes.
-      if (data.note.lastSharedLetterId) {
-        router.replace("/");
-        return;
-      }
-
-      setNote(data.note);
-      setDraftTitle(data.note.title);
-      setDraftMessage(data.note.message);
-
-      setNoteLoading(false);
-    })();
-  }, [noteId, profile, router]);
+    if (!hydrated) {
+      setDraftTitle(note.title);
+      setDraftMessage(note.message);
+      setHydrated(true);
+    }
+  }, [note, hydrated, router]);
 
   const dirty = useMemo(() => {
-    if (!note) {
-      return false;
-    }
-
+    if (!note) return false;
     return note.title !== draftTitle || note.message !== draftMessage;
   }, [draftMessage, draftTitle, note]);
 
-  const saveNote = async () => {
-    if (!profile || !note) {
-      return null;
+  const glyphMap: GlyphMap = useMemo(() => {
+    const map: GlyphMap = {};
+    for (const g of glyphs ?? []) {
+      map[g.character] = {
+        character: g.character,
+        dataUrl: g.dataUrl,
+        updatedAt: g.updatedAt
+      };
     }
+    return map;
+  }, [glyphs]);
 
+  const saveNote = async () => {
+    if (!note) return;
     setSaveState("saving");
-
     try {
-      const response = await fetch(`/api/notes/${note.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profileId: profile.id,
-          title: draftTitle,
-          message: draftMessage
-        })
+      await updateNote({
+        id: note._id,
+        title: draftTitle,
+        message: draftMessage
       });
-
-      if (!response.ok) {
-        throw new Error("Unable to save note.");
-      }
-
-      const data = (await response.json()) as { note: Note };
-      setNote(data.note);
-      setDraftTitle(data.note.title);
-      setDraftMessage(data.note.message);
       setSaveState("saved");
       window.setTimeout(() => setSaveState("idle"), 1000);
-      return data.note;
     } catch {
       setSaveState("error");
-      return null;
     }
   };
 
-  if (loading || !profile || noteLoading) {
+  if (note === undefined || glyphs === undefined) {
     return (
       <main className="simple-shell">
         <div className="loader-container">
@@ -109,7 +85,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     );
   }
 
-  if (!note) {
+  if (note === null) {
     return (
       <main className="simple-shell">
         <section className="empty-state">
@@ -141,7 +117,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
             <button
               type="button"
               className="primary-button"
-              onClick={() => router.push(`/notes/${note.id}/publish`)}
+              onClick={() => router.push(`/notes/${note._id}/publish`)}
             >
               Manage
             </button>
@@ -158,7 +134,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
               <button
                 type="button"
                 className="primary-button"
-                onClick={() => router.push(`/notes/${note.id}/publish`)}
+                onClick={() => router.push(`/notes/${note._id}/publish`)}
               >
                 Publish
               </button>
@@ -176,7 +152,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
       >
         <div className="paper-editor-wrapper">
           <GlyphEditor
-            glyphs={profile.glyphs}
+            glyphs={glyphMap}
             value={draftMessage}
             onChange={setDraftMessage}
             placeholder="Write your note here..."

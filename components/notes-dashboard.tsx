@@ -4,34 +4,32 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Eraser, X } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { CHARACTERS } from "@/lib/alphabet";
-import type { Note, Profile } from "@/lib/types";
+import { api } from "@/convex/_generated/api";
+import type { Note, NoteId } from "@/lib/types";
 
-type NotesDashboardProps = {
-  profile: Profile;
-};
-
-export function NotesDashboard({ profile }: NotesDashboardProps) {
+export function NotesDashboard() {
   const router = useRouter();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  const notes = useQuery(api.notes.list);
+  const glyphs = useQuery(api.glyphs.list);
+  const createNote = useMutation(api.notes.create);
+  const deleteNote = useMutation(api.notes.remove);
+  const unshareNote = useMutation(api.notes.unshare);
+  const { signOut } = useAuthActions();
+
   const [creating, setCreating] = useState(false);
-  const [managingNoteId, setManagingNoteId] = useState<string | null>(null);
+  const [managingNoteId, setManagingNoteId] = useState<NoteId | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [isTakingDown, setIsTakingDown] = useState(false);
-  const [copiedCardId, setCopiedCardId] = useState<string | null>(null);
+  const [copiedCardId, setCopiedCardId] = useState<NoteId | null>(null);
 
-  useEffect(() => {
-    void (async () => {
-      const response = await fetch(`/api/notes?profileId=${profile.id}`);
-      const data = (await response.json()) as { notes: Note[] };
-      setNotes(data.notes);
-      setLoading(false);
-    })();
-  }, [profile.id]);
+  const loading = notes === undefined || glyphs === undefined;
+  const glyphCount = glyphs?.length ?? 0;
 
   const managingNote = managingNoteId
-    ? notes.find((n) => n.id === managingNoteId) ?? null
+    ? notes?.find((n) => n._id === managingNoteId) ?? null
     : null;
 
   useEffect(() => {
@@ -41,7 +39,6 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
     };
     window.addEventListener("keydown", handleKey);
 
-    // Lock background scroll while the modal is open.
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -58,13 +55,12 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
 
   const handleCreate = async () => {
     setCreating(true);
-    const response = await fetch("/api/notes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profileId: profile.id })
-    });
-    const data = (await response.json()) as { note: Note };
-    router.push(`/notes/${data.note.id}`);
+    try {
+      const id = await createNote();
+      router.push(`/notes/${id}`);
+    } catch {
+      setCreating(false);
+    }
   };
 
   const handleCopyLink = async () => {
@@ -79,9 +75,9 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
     if (!note.lastSharedLetterId) return;
     const url = `${window.location.origin}/l/${note.lastSharedLetterId}`;
     await navigator.clipboard.writeText(url);
-    setCopiedCardId(note.id);
+    setCopiedCardId(note._id);
     window.setTimeout(() => {
-      setCopiedCardId((current) => (current === note.id ? null : current));
+      setCopiedCardId((current) => (current === note._id ? null : current));
     }, 1500);
   };
 
@@ -92,28 +88,14 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
       }`
     );
     if (!confirmed) return;
-
-    const response = await fetch(
-      `/api/notes/${note.id}?profileId=${profile.id}`,
-      { method: "DELETE" }
-    );
-    if (!response.ok) return;
-    setNotes((prev) => prev.filter((n) => n.id !== note.id));
+    await deleteNote({ id: note._id });
   };
 
   const handleTakeDown = async () => {
-    if (!managingNote?.lastSharedLetterId) return;
+    if (!managingNote) return;
     setIsTakingDown(true);
     try {
-      const response = await fetch(
-        `/api/notes/${managingNote.id}/share?profileId=${profile.id}`,
-        { method: "DELETE" }
-      );
-      if (!response.ok) throw new Error("Unable to take down.");
-      const data = (await response.json()) as { note: Note };
-      setNotes((prev) =>
-        prev.map((n) => (n.id === data.note.id ? data.note : n))
-      );
+      await unshareNote({ id: managingNote._id });
       closeModal();
     } catch (err) {
       console.error(err);
@@ -133,9 +115,15 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
         </div>
         <div className="header-actions">
           <Link href="/characters" className="ghost-link">
-            Edit Character Set ({Object.keys(profile.glyphs).length}/
-            {CHARACTERS.length})
+            Edit Character Set ({glyphCount}/{CHARACTERS.length})
           </Link>
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={() => void signOut()}
+          >
+            Sign out
+          </button>
           <button
             type="button"
             className="primary-button"
@@ -151,7 +139,7 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
         <div className="loader-container">
           <div className="loader" />
         </div>
-      ) : notes.length === 0 ? (
+      ) : notes!.length === 0 ? (
         <div className="empty-dashboard">
           <h2>No notes yet.</h2>
           <p className="muted-copy">
@@ -160,10 +148,10 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
         </div>
       ) : (
         <section className="notes-grid">
-          {notes.map((note) => {
+          {notes!.map((note) => {
             const isLive = Boolean(note.lastSharedLetterId);
             return (
-              <article key={note.id} className="panel note-card">
+              <article key={note._id} className="panel note-card">
                 <div className="note-card-body">
                   <div className="note-card-heading">
                     <h2>{note.title}</h2>
@@ -186,14 +174,14 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
                         className="ghost-link"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setManagingNoteId(note.id);
+                          setManagingNoteId(note._id);
                         }}
                       >
                         Edit
                       </button>
                     ) : (
                       <Link
-                        href={`/notes/${note.id}`}
+                        href={`/notes/${note._id}`}
                         className="ghost-link"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -209,12 +197,12 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
                           void handleCopyCardLink(note);
                         }}
                         aria-label={
-                          copiedCardId === note.id
+                          copiedCardId === note._id
                             ? "Link copied"
                             : `Copy link for ${note.title}`
                         }
                       >
-                        {copiedCardId === note.id ? (
+                        {copiedCardId === note._id ? (
                           <Check size={16} />
                         ) : (
                           <Copy size={16} />

@@ -15,6 +15,9 @@ type MessagePreviewProps = {
   onUpdateAttachment?: (id: string, updates: Partial<Attachment>) => void;
   onRemoveAttachment?: (id: string) => void;
   onSelectAttachment?: (id: string) => void;
+  drawingMode?: boolean;
+  drawingSettings?: { color: string; size: number; isEraser: boolean };
+  onDrawFinish?: (dataUrl: string) => void;
 };
 
 type Point = {
@@ -262,6 +265,7 @@ export function MessagePreview({
   const containerRef = useRef<HTMLDivElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [isDrawing, setIsDrawing] = useState(false);
 
   const { lineHeight, lineGap, wordGap, padding, lineAdvance } = useMemo(() => {
     // Default values for desktop/large screens

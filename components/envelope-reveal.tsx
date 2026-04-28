@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import type { StoredLetter } from "@/lib/types";
+import type { PublicLetter } from "@/lib/types";
 import { MessagePreview } from "./message-preview";
 
 type Phase = "closed" | "open" | "ejecting" | "reading";
@@ -51,7 +51,7 @@ function makeStampPath(width: number, height: number, radius: number) {
 
 const STAMP_PATH = makeStampPath(88, 100, 4);
 
-export function EnvelopeReveal({ letter }: { letter: StoredLetter }) {
+export function EnvelopeReveal({ letter }: { letter: PublicLetter }) {
   const [phase, setPhase] = useState<Phase>("closed");
   const [dragProgress, setDragProgress] = useState(0);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);

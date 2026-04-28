@@ -129,7 +129,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
                 onClick={saveNote}
                 disabled={!dirty || saveState === "saving"}
               >
-                {saveState === "saving" ? "Saving..." : "Save"}
+                Save
               </button>
               <button
                 type="button"

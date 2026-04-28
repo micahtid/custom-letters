@@ -71,9 +71,21 @@ export function PublishView({ noteId }: PublishViewProps) {
     return map;
   }, [glyphs]);
 
+  // Cap raw upload size to keep the published note under Convex's 1MB
+  // document limit. Base64 encoding inflates payloads ~33%, and a single
+  // letter can have several attachments stacked.
+  const MAX_UPLOAD_BYTES = 500 * 1024;
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      window.alert(
+        `Image is too large (${Math.round(file.size / 1024)} KB). Please choose one under ${MAX_UPLOAD_BYTES / 1024} KB.`
+      );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -101,6 +113,13 @@ export function PublishView({ noteId }: PublishViewProps) {
   const handleStickerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      window.alert(
+        `Sticker is too large (${Math.round(file.size / 1024)} KB). Please choose one under ${MAX_UPLOAD_BYTES / 1024} KB.`
+      );
+      if (stickerInputRef.current) stickerInputRef.current.value = "";
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {

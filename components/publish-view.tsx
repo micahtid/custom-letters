@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowBigLeft, Type, Grid, Square, Image as ImageIcon, X, MousePointer2, GripVertical, Layers, Sticker, Brush, Eraser } from "lucide-react";
-import type { Attachment, Note, PaperStyle } from "@/lib/types";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Attachment, GlyphMap, NoteId, PaperStyle } from "@/lib/types";
 
 const ATTACHMENT_BORDER_COLORS = [
   "#ffffff",
@@ -15,17 +17,16 @@ const ATTACHMENT_BORDER_COLORS = [
   "#1f2937"
 ];
 import { MessagePreview } from "@/components/message-preview";
-import { useProfile } from "@/hooks/use-profile";
 
 type PublishViewProps = {
   noteId: string;
 };
 
 export function PublishView({ noteId }: PublishViewProps) {
-  const { profile, loading } = useProfile();
   const router = useRouter();
-  const [note, setNote] = useState<Note | null>(null);
-  const [noteLoading, setNoteLoading] = useState(true);
+  const note = useQuery(api.notes.get, { id: noteId as NoteId });
+  const glyphs = useQuery(api.glyphs.list);
+  const shareNote = useMutation(api.notes.share);
 
   const [paperStyle, setPaperStyle] = useState<PaperStyle>("plain");
   const [paperColor, setPaperColor] = useState("#ffffff");
@@ -33,8 +34,8 @@ export function PublishView({ noteId }: PublishViewProps) {
   const [editingAttachmentId, setEditingAttachmentId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [draggedLayerIndex, setDraggedLayerIndex] = useState<number | null>(null);
+  const [hydratedAttachments, setHydratedAttachments] = useState(false);
 
-  // Drawing Mode State
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawingColor, setDrawingColor] = useState("#1f2937");
   const [drawingSize, setDrawingSize] = useState(4);
@@ -44,28 +45,31 @@ export function PublishView({ noteId }: PublishViewProps) {
   const stickerInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!profile) return;
+    if (note === undefined) return;
+    if (note === null) return;
 
-    void (async () => {
-      const response = await fetch(`/api/notes/${noteId}?profileId=${profile.id}`);
-      if (!response.ok) {
-        setNote(null);
-        setNoteLoading(false);
-        return;
-      }
-      const data = (await response.json()) as { note: Note };
+    if (note.lastSharedLetterId) {
+      router.replace("/");
+      return;
+    }
 
-      // Live letters are managed from the home modal — redirect away.
-      if (data.note.lastSharedLetterId) {
-        router.replace("/");
-        return;
-      }
+    if (!hydratedAttachments) {
+      setAttachments(note.attachments ?? []);
+      setHydratedAttachments(true);
+    }
+  }, [note, hydratedAttachments, router]);
 
-      setNote(data.note);
-      setAttachments(data.note.attachments ?? []);
-      setNoteLoading(false);
-    })();
-  }, [noteId, profile, router]);
+  const glyphMap: GlyphMap = useMemo(() => {
+    const map: GlyphMap = {};
+    for (const g of glyphs ?? []) {
+      map[g.character] = {
+        character: g.character,
+        dataUrl: g.dataUrl,
+        updatedAt: g.updatedAt
+      };
+    }
+    return map;
+  }, [glyphs]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -129,7 +133,7 @@ export function PublishView({ noteId }: PublishViewProps) {
       dataUrl,
       x: 0,
       y: 0,
-      width: 100, 
+      width: 100,
       rotation: 0,
       borderColor: "transparent",
       shadow: 0,
@@ -191,25 +195,16 @@ export function PublishView({ noteId }: PublishViewProps) {
   };
 
   const handlePublish = async () => {
-    if (!profile || !note) return;
+    if (!note) return;
     setIsPublishing(true);
 
     try {
-      const response = await fetch(`/api/notes/${note.id}/share`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profileId: profile.id,
-          paperStyle,
-          paperColor,
-          attachments
-        })
+      await shareNote({
+        id: note._id,
+        paperStyle,
+        paperColor,
+        attachments
       });
-
-      if (!response.ok) throw new Error("Unable to publish.");
-
-      // Once published, management lives on the home dashboard modal.
-      // Hard-navigate so the dashboard refetches and reflects the live state.
       window.location.href = "/";
     } catch (err) {
       console.error(err);
@@ -218,9 +213,8 @@ export function PublishView({ noteId }: PublishViewProps) {
   };
 
   const DRAWING_COLORS = ["#1f2937", "#fc5050", "#10b981", "#3b82f6", "#f59e0b", "#8b5cf6"];
-  const PEN_SIZES = [2, 4, 8, 16, 24];
 
-  if (loading || !profile || noteLoading) {
+  if (note === undefined || glyphs === undefined) {
     return (
       <main className="simple-shell">
         <div className="loader-container">
@@ -230,7 +224,7 @@ export function PublishView({ noteId }: PublishViewProps) {
     );
   }
 
-  if (!note) {
+  if (note === null) {
     return (
       <main className="simple-shell">
         <section className="empty-state">
@@ -264,8 +258,8 @@ export function PublishView({ noteId }: PublishViewProps) {
             <section className="control-section editor-controls">
               <div className="control-group">
                 <span className="control-label">Size</span>
-                <input 
-                  type="range" min="10" max="100" 
+                <input
+                  type="range" min="10" max="100"
                   value={editingAttachment?.width ?? 30}
                   onChange={(e) => updateAttachmentWidth(editingAttachmentId, parseInt(e.target.value))}
                 />
@@ -273,8 +267,8 @@ export function PublishView({ noteId }: PublishViewProps) {
 
               <div className="control-group">
                 <span className="control-label">Rotation</span>
-                <input 
-                  type="range" min="-180" max="180" 
+                <input
+                  type="range" min="-180" max="180"
                   value={editingAttachment?.rotation ?? 0}
                   onChange={(e) => updateAttachment(editingAttachmentId, { rotation: parseInt(e.target.value) })}
                 />
@@ -282,8 +276,8 @@ export function PublishView({ noteId }: PublishViewProps) {
 
               <div className="control-group">
                 <span className="control-label">Shadow</span>
-                <input 
-                  type="range" min="0" max="20" 
+                <input
+                  type="range" min="0" max="20"
                   value={editingAttachment?.shadow ?? 0}
                   onChange={(e) => updateAttachment(editingAttachmentId, { shadow: parseInt(e.target.value) })}
                 />
@@ -305,7 +299,7 @@ export function PublishView({ noteId }: PublishViewProps) {
                 </div>
               </div>
 
-              <button 
+              <button
                 className="primary-button full-width"
                 onClick={() => setEditingAttachmentId(null)}
               >
@@ -328,7 +322,7 @@ export function PublishView({ noteId }: PublishViewProps) {
                       }}
                     />
                   ))}
-                  <button 
+                  <button
                     className={`tool-btn ${isEraser ? "active" : ""}`}
                     onClick={() => setIsEraser(true)}
                     title="Eraser"
@@ -340,14 +334,14 @@ export function PublishView({ noteId }: PublishViewProps) {
 
               <div className="control-group">
                 <span className="control-label">Pen Size</span>
-                <input 
-                  type="range" min="1" max="50" 
+                <input
+                  type="range" min="1" max="50"
                   value={drawingSize}
                   onChange={(e) => setDrawingSize(parseInt(e.target.value))}
                 />
               </div>
 
-              <button 
+              <button
                 className="primary-button full-width"
                 onClick={() => setIsDrawingMode(false)}
               >
@@ -360,7 +354,7 @@ export function PublishView({ noteId }: PublishViewProps) {
                 <h3 className="field-label">Paper Style</h3>
                 <div className="style-picker">
                   {(["plain", "lined", "grid"] as PaperStyle[]).map(s => (
-                    <button 
+                    <button
                       key={s}
                       className={`style-btn ${paperStyle === s ? "active" : ""}`}
                       onClick={() => setPaperStyle(s)}
@@ -390,21 +384,21 @@ export function PublishView({ noteId }: PublishViewProps) {
                 <div className="section-header-row">
                   <h3 className="field-label">Layers</h3>
                   <div className="header-actions-small">
-                    <button 
+                    <button
                       className="ghost-button upload-small-btn"
                       onClick={() => fileInputRef.current?.click()}
                       title="Add Image"
                     >
                       <ImageIcon size={14} />
                     </button>
-                    <button 
+                    <button
                       className="ghost-button upload-small-btn"
                       onClick={() => stickerInputRef.current?.click()}
                       title="Add Sticker"
                     >
                       <Sticker size={14} />
                     </button>
-                    <button 
+                    <button
                       className="ghost-button upload-small-btn"
                       onClick={() => setIsDrawingMode(true)}
                       title="Draw"
@@ -413,19 +407,19 @@ export function PublishView({ noteId }: PublishViewProps) {
                     </button>
                   </div>
                 </div>
-                
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  hidden 
-                  ref={fileInputRef} 
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  ref={fileInputRef}
                   onChange={handleFileUpload}
                 />
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  hidden 
-                  ref={stickerInputRef} 
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  ref={stickerInputRef}
                   onChange={handleStickerUpload}
                 />
 
@@ -439,8 +433,8 @@ export function PublishView({ noteId }: PublishViewProps) {
                     [...attachments].reverse().map((a, i) => {
                       const actualIndex = attachments.length - 1 - i;
                       return (
-                        <div 
-                          key={a.id} 
+                        <div
+                          key={a.id}
                           className={`layer-item ${editingAttachmentId === a.id ? "active" : ""} ${draggedLayerIndex === actualIndex ? "dragging" : ""}`}
                           draggable
                           onDragStart={(e) => handleLayerDragStart(e, actualIndex)}
@@ -486,9 +480,9 @@ export function PublishView({ noteId }: PublishViewProps) {
         <section className="publish-preview">
           <h3 className="field-label">Preview</h3>
           <div className="preview-container">
-            <MessagePreview 
-              glyphs={profile.glyphs} 
-              message={note.message} 
+            <MessagePreview
+              glyphs={glyphMap}
+              message={note.message}
               paperStyle={paperStyle}
               paperColor={paperColor}
               attachments={attachments}

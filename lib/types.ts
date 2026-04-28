@@ -1,16 +1,12 @@
+import type { Doc, Id } from "@/convex/_generated/dataModel";
+
 export type Glyph = {
   character: string;
   dataUrl: string;
-  updatedAt: string;
+  updatedAt: number;
 };
 
 export type GlyphMap = Record<string, Glyph>;
-
-export type Profile = {
-  id: string;
-  createdAt: string;
-  glyphs: GlyphMap;
-};
 
 export type PaperStyle = "plain" | "lined" | "grid";
 
@@ -18,41 +14,29 @@ export type Attachment = {
   id: string;
   type: "image" | "sticker";
   dataUrl: string;
-  x: number; // percentage (0-100)
-  y: number; // percentage (0-100)
-  width: number; // percentage (0-100)
-  rotation: number; // degrees
+  x: number;
+  y: number;
+  width: number;
+  rotation: number;
   borderColor: string;
-  shadow: number; // 0-20 (blur radius)
+  shadow: number;
   number: number;
 };
 
-export type Note = {
-  id: string;
-  profileId: string;
-  title: string;
-  message: string;
-  attachments?: Attachment[];
-  createdAt: string;
-  updatedAt: string;
-  lastSharedLetterId: string | null;
-};
+export type Note = Doc<"notes">;
+export type NoteId = Id<"notes">;
+export type LetterId = Id<"letters">;
 
-export type StoredLetter = {
-  id: string;
-  noteId: string;
-  profileId: string;
+// Shape returned by `convex/letters.getPublic` — the public letter view
+// reads this, no auth required.
+export type PublicLetter = {
+  id: LetterId;
+  noteId: NoteId;
   title: string;
   message: string;
+  paperStyle: PaperStyle;
+  paperColor: string;
+  attachments: Attachment[];
   glyphs: GlyphMap;
-  paperStyle?: PaperStyle;
-  paperColor?: string;
-  attachments?: Attachment[];
   createdAt: string;
-};
-
-export type DataStore = {
-  profiles: Record<string, Profile>;
-  notes: Record<string, Note>;
-  letters: Record<string, StoredLetter>;
 };

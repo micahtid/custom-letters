@@ -3,6 +3,9 @@
 .next-prod
 node_modules
 data/store.json
+.env*.local
+.env
+convex/_generated
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

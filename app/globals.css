@@ -243,6 +243,17 @@ h2 {
   box-shadow: var(--shadow-strong);
 }
 
+.sign-in-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.sign-in-card .primary-button {
+  margin-top: 8px;
+}
+
 @media (max-width: 640px) {
   .empty-state,
   .missing-card {

@@ -3,11 +3,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowBigLeft } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { CHARACTERS } from "@/lib/alphabet";
 import { DrawingPad } from "@/components/drawing-pad";
-import { useProfile } from "@/hooks/use-profile";
-
-type SaveState = "idle" | "saving" | "saved" | "error";
 
 const GROUPS = [
   { label: "Uppercase", chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("") },
@@ -17,88 +16,43 @@ const GROUPS = [
 ];
 
 export function CharacterSetManager() {
-  const { profile, loading, setProfile } = useProfile();
+  const glyphs = useQuery(api.glyphs.list);
+  const saveGlyph = useMutation(api.glyphs.save);
+  const clearGlyphs = useMutation(api.glyphs.clear);
+
   const [activeChar, setActiveChar] = useState(CHARACTERS[0]);
   const [padVersion, setPadVersion] = useState(0);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [saveState, setSaveState] = useState<SaveState>("idle");
 
-  const completed = useMemo(() => {
-    if (!profile) {
-      return 0;
-    }
+  const savedSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const g of glyphs ?? []) set.add(g.character);
+    return set;
+  }, [glyphs]);
 
-    return CHARACTERS.filter((character) => profile.glyphs[character]).length;
-  }, [profile]);
+  const completed = savedSet.size;
 
   const restartCharacterSet = async () => {
-    if (!profile) {
-      return;
-    }
-
     const confirmed = window.confirm(
       "Clear all saved characters and start over? This cannot be undone."
     );
+    if (!confirmed) return;
 
-    if (!confirmed) {
-      return;
-    }
-
-    const response = await fetch(`/api/glyphs?profileId=${profile.id}`, {
-      method: "DELETE"
-    });
-
-    if (!response.ok) {
-      setSaveState("error");
-      return;
-    }
-
-    const data = (await response.json()) as { profile: typeof profile };
-    setProfile(data.profile);
+    await clearGlyphs();
     setActiveChar(CHARACTERS[0]);
     setPadVersion((value) => value + 1);
-    setSaveState("idle");
   };
 
-  const saveGlyph = async (dataUrl: string) => {
-    if (!profile) {
-      return;
-    }
-
-    setSaveState("saving");
-
-    try {
-      const response = await fetch("/api/glyphs", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profileId: profile.id,
-          character: activeChar,
-          dataUrl
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error("Unable to save glyph.");
-      }
-
-      const data = (await response.json()) as { profile: typeof profile };
-      setProfile(data.profile);
-      setSaveState("saved");
-
-      const nextCharacter =
-        CHARACTERS.find((character) => !data.profile.glyphs[character]) ??
-        activeChar;
-
-      setActiveChar(nextCharacter);
-      setPadVersion((value) => value + 1);
-      window.setTimeout(() => setSaveState("idle"), 900);
-    } catch {
-      setSaveState("error");
-    }
+  const handleSave = async (dataUrl: string) => {
+    await saveGlyph({ character: activeChar, dataUrl });
+    const nextCharacter =
+      CHARACTERS.find(
+        (c) => c !== activeChar && !savedSet.has(c)
+      ) ?? activeChar;
+    setActiveChar(nextCharacter);
+    setPadVersion((value) => value + 1);
   };
 
-  if (loading || !profile) {
+  if (glyphs === undefined) {
     return (
       <main className="simple-shell">
         <div className="loader-container">
@@ -139,7 +93,7 @@ export function CharacterSetManager() {
               <DrawingPad
                 key={padVersion}
                 label={activeChar}
-                onSave={saveGlyph}
+                onSave={handleSave}
               />
             </div>
           </div>
@@ -151,8 +105,7 @@ export function CharacterSetManager() {
               <h3 className="group-label">{group.label}</h3>
               <div className="character-grid">
                 {group.chars.map((character) => {
-                  const saved = Boolean(profile.glyphs[character]);
-
+                  const saved = savedSet.has(character);
                   return (
                     <button
                       key={character}

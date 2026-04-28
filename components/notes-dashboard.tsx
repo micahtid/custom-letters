@@ -93,13 +93,6 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
             return (
               <article key={note.id} className="panel note-card">
                 <div className="note-card-body">
-                  <p className="note-date">
-                    Last Edited{" "}
-                    {new Intl.DateTimeFormat("en-US", {
-                      month: "short",
-                      day: "numeric"
-                    }).format(new Date(note.updatedAt))}
-                  </p>
                   <h2>{note.title}</h2>
                   <p className="note-snippet">
                     {note.message.trim() || "No message yet."}
@@ -126,15 +119,6 @@ export function NotesDashboard({ profile }: NotesDashboardProps) {
                       Share
                     </button>
                   </div>
-                  {note.lastSharedLetterId ? (
-                    <Link 
-                      href={`/l/${note.lastSharedLetterId}`} 
-                      className="text-link"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Last shared note
-                    </Link>
-                  ) : null}
                 </div>
               </article>
             );

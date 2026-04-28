@@ -54,9 +54,9 @@ const PAPER_ASPECT_RATIO = 1.414;
 
 let fallbackWidthContext: CanvasRenderingContext2D | null = null;
 
-function getFallbackWidth(char: string) {
+function getFallbackWidth(char: string, fontSize: number) {
   if (typeof document === "undefined") {
-    return 24;
+    return fontSize * 0.5;
   }
 
   if (!fallbackWidthContext) {
@@ -64,12 +64,12 @@ function getFallbackWidth(char: string) {
   }
 
   if (!fallbackWidthContext) {
-    return 24;
+    return fontSize * 0.5;
   }
 
   fallbackWidthContext.font =
-    "400 23px \"Georgia\", \"Times New Roman\", serif";
-  return Math.max(12, Math.ceil(fallbackWidthContext.measureText(char).width) + 4);
+    `400 ${Math.round(fontSize * 0.52)}px "Georgia", "Times New Roman", serif`;
+  return Math.max(fontSize * 0.25, Math.ceil(fallbackWidthContext.measureText(char).width) + 4);
 }
 
 function rotatePoint(point: Point, center: Point, angleDeg: number) {
@@ -95,10 +95,10 @@ function getAttachmentBox(
   const imageWidth = (attachment.width / 100) * containerWidth;
   const imageHeight = imageWidth * aspectRatio;
   const left = (attachment.x / 100) * containerWidth;
-  
+
   // y is percentage relative to page height
   const top = (pageIndex * pageHeight) + (attachment.y / 100) * pageHeight;
-  
+
   const framePadding = attachment.type === "sticker" ? 0 : ATTACHMENT_FRAME_PADDING;
   const outerWidth = imageWidth + framePadding * 2;
   const outerHeight = imageHeight + framePadding * 2;
@@ -205,17 +205,19 @@ function subtractInterval(
 function getLineSegments(
   boxes: AttachmentBox[],
   containerWidth: number,
-  top: number
+  top: number,
+  padding: number,
+  lineHeight: number
 ) {
   let segments = [
     {
-      start: PADDING,
-      end: Math.max(PADDING, containerWidth - PADDING)
+      start: padding,
+      end: Math.max(padding, containerWidth - padding)
     }
   ];
 
   const bandTop = top - 4;
-  const bandBottom = top + LINE_HEIGHT + 4;
+  const bandBottom = top + lineHeight + 4;
 
   for (const box of boxes) {
     if (box.attachment.type === "sticker") {
@@ -228,8 +230,8 @@ function getLineSegments(
     }
 
     segments = subtractInterval(segments, {
-      start: Math.max(PADDING, blocked.start),
-      end: Math.min(containerWidth - PADDING, blocked.end)
+      start: Math.max(padding, blocked.start),
+      end: Math.min(containerWidth - padding, blocked.end)
     });
   }
 
@@ -260,7 +262,33 @@ export function MessagePreview({
   const containerRef = useRef<HTMLDivElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [isDrawing, setIsDrawing] = useState(false);
+
+  const { lineHeight, lineGap, wordGap, padding, lineAdvance } = useMemo(() => {
+    // Default values for desktop/large screens
+    if (containerWidth === 0 || containerWidth >= 768) {
+      return {
+        lineHeight: 44,
+        lineGap: 12,
+        wordGap: 16,
+        padding: 64,
+        lineAdvance: 44 + 12
+      };
+    }
+
+    // Scaling for smaller screens
+    const factor = Math.max(0.7, containerWidth / 768);
+    const lh = 44 * factor;
+    const lg = 12 * factor;
+
+    return {
+      lineHeight: lh,
+      lineGap: lg,
+      wordGap: 16 * factor,
+      padding: Math.max(20, 64 * factor),
+      lineAdvance: lh + lg
+    };
+  }, [containerWidth]);
+
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [currentStroke, setCurrentStroke] = useState<Point[] | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -610,31 +638,31 @@ export function MessagePreview({
 
     const lines = message.split("\n");
     const words: Array<{ word: string; x: number; y: number }> = [];
-    let currentTop = PADDING;
+    let currentTop = padding;
     let currentPageIndex = 0;
 
     const getWordWidth = (word: string) => {
       return Array.from(word).reduce((total, char, index) => {
         const glyphAspectRatio = glyphAspectRatios[char];
         const characterWidth = glyphAspectRatio
-          ? Math.max(12, LINE_HEIGHT * glyphAspectRatio)
-          : getFallbackWidth(char);
+          ? Math.max(lineHeight * 0.27, lineHeight * glyphAspectRatio)
+          : getFallbackWidth(char, lineHeight);
 
-        return total + (index === 0 ? characterWidth : characterWidth - 6);
+        return total + (index === 0 ? characterWidth : characterWidth - (lineHeight * 0.136));
       }, 0);
     };
 
     const advanceToNextPage = () => {
       currentPageIndex += 1;
-      return (currentPageIndex * pageHeight) + PADDING;
+      return (currentPageIndex * pageHeight) + padding;
     };
 
     for (const line of lines) {
       const lineWords = line.trim().length === 0 ? [] : line.trim().split(/\s+/);
 
       if (lineWords.length === 0) {
-        currentTop += LINE_ADVANCE;
-        if (currentTop + LINE_HEIGHT > (currentPageIndex + 1) * pageHeight - PADDING) {
+        currentTop += lineAdvance;
+        if (currentTop + lineHeight > (currentPageIndex + 1) * pageHeight - padding) {
           currentTop = advanceToNextPage();
         }
         continue;
@@ -645,14 +673,14 @@ export function MessagePreview({
 
       while (wordIndex < lineWords.length) {
         // If the band is too low on the current page, move to next page
-        if (bandTop + LINE_HEIGHT > (currentPageIndex + 1) * pageHeight - PADDING) {
+        if (bandTop + lineHeight > (currentPageIndex + 1) * pageHeight - padding) {
           bandTop = advanceToNextPage();
         }
 
-        const segments = getLineSegments(boxes, containerWidth, bandTop);
+        const segments = getLineSegments(boxes, containerWidth, bandTop, padding, lineHeight);
 
         if (segments.length === 0) {
-          bandTop += LINE_ADVANCE;
+          bandTop += lineAdvance;
           continue;
         }
 
@@ -667,7 +695,7 @@ export function MessagePreview({
             const word = lineWords[wordIndex];
             const width = getWordWidth(word);
             const nextWidth =
-              segmentWords.length === 0 ? width : usedWidth + WORD_GAP + width;
+              segmentWords.length === 0 ? width : usedWidth + wordGap + width;
 
             if (nextWidth > segmentWidth) {
               break;
@@ -689,7 +717,7 @@ export function MessagePreview({
 
           for (const segmentWord of segmentWords) {
             words.push({ word: segmentWord.word, x: cursor, y: bandTop });
-            cursor += segmentWord.width + WORD_GAP;
+            cursor += segmentWord.width + wordGap;
           }
 
           placedWordOnBand = true;
@@ -707,23 +735,23 @@ export function MessagePreview({
         }
 
         if (wordIndex < lineWords.length) {
-          bandTop += LINE_ADVANCE;
+          bandTop += lineAdvance;
         }
       }
 
-      currentTop = bandTop + LINE_ADVANCE;
+      currentTop = bandTop + lineAdvance;
     }
 
     const textBottom =
       words.length > 0
-        ? Math.max(...words.map((word) => word.y + LINE_HEIGHT))
+        ? Math.max(...words.map((word) => word.y + lineHeight))
         : currentTop;
     const attachmentsBottom =
       boxes.length > 0
         ? Math.max(...boxes.map((box) => box.bounds.maxY + SAFE_ZONE))
-        : PADDING;
+        : padding;
 
-    const maxContentBottom = Math.max(textBottom + PADDING, attachmentsBottom + PADDING);
+    const maxContentBottom = Math.max(textBottom + padding, attachmentsBottom + padding);
     const pageCount = Math.max(1, Math.ceil(maxContentBottom / pageHeight));
 
     return {
@@ -737,7 +765,11 @@ export function MessagePreview({
     containerWidth,
     pageHeight,
     glyphAspectRatios,
-    message
+    message,
+    padding,
+    lineHeight,
+    lineAdvance,
+    wordGap
   ]);
 
   const boxesById = useMemo(
@@ -817,7 +849,7 @@ export function MessagePreview({
                     position: "absolute",
                     left: placedWord.x,
                     top: placedWord.y,
-                    height: LINE_HEIGHT
+                    height: lineHeight
                   }}
                 >
                   {Array.from(placedWord.word).map((char, charIndex) => {
@@ -831,12 +863,18 @@ export function MessagePreview({
                         className="glyph-image"
                         width={112}
                         height={48}
+                        style={{ height: lineHeight, width: "auto" }}
                         unoptimized
                       />
                     ) : (
                       <span
                         key={`${placedWord.word}-${char}-${charIndex}`}
                         className="fallback-char"
+                        style={{ 
+                          height: lineHeight, 
+                          lineHeight: `${lineHeight}px`,
+                          fontSize: `${lineHeight * 0.33}px` 
+                        }}
                       >
                         {char}
                       </span>

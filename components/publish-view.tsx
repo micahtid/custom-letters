@@ -474,7 +474,7 @@ export function PublishView({ noteId }: PublishViewProps) {
 
               {shareUrl && (
                 <div className="share-card-compact">
-                  <span className="field-label">Link ready!</span>
+                  <span className="field-label">Link Ready!</span>
                   <div className="share-row">
                     <input readOnly value={shareUrl} />
                     <button
@@ -484,10 +484,6 @@ export function PublishView({ noteId }: PublishViewProps) {
                       Copy
                     </button>
                   </div>
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  <Link href={shareUrl as any} target="_blank" className="text-link view-link">
-                    View published note
-                  </Link>
                 </div>
               )}
             </>

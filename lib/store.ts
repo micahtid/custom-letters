@@ -169,6 +169,13 @@ export async function updateNote(
     throw new Error("Note not found.");
   }
 
+  // Editing the note takes down any published letter — only one publishable
+  // link per letter, and it must reflect the most recently published content.
+  if (note.lastSharedLetterId) {
+    delete store.letters[note.lastSharedLetterId];
+    note.lastSharedLetterId = null;
+  }
+
   note.title = updates.title.trim() || "Untitled note";
   note.message = updates.message;
   note.updatedAt = new Date().toISOString();
@@ -194,8 +201,16 @@ export async function shareNote(
     throw new Error("Note not found.");
   }
 
+  // Reuse the existing letter id if the note is already live so the public
+  // URL stays stable when only publish settings (paper style, attachments)
+  // change. Content edits go through updateNote, which clears the id first.
+  const letterId = note.lastSharedLetterId ?? crypto.randomUUID().slice(0, 8);
+  const previousLetter = note.lastSharedLetterId
+    ? store.letters[note.lastSharedLetterId]
+    : undefined;
+
   const letter: StoredLetter = {
-    id: crypto.randomUUID().slice(0, 8),
+    id: letterId,
     noteId,
     profileId,
     title: note.title,
@@ -204,15 +219,50 @@ export async function shareNote(
     paperStyle: options.paperStyle ?? "plain",
     paperColor: options.paperColor ?? "#ffffff",
     attachments: options.attachments ?? [],
-    createdAt: new Date().toISOString()
+    createdAt: previousLetter?.createdAt ?? new Date().toISOString()
   };
 
-  store.letters[letter.id] = letter;
-  note.lastSharedLetterId = letter.id;
+  store.letters[letterId] = letter;
+  note.lastSharedLetterId = letterId;
   note.updatedAt = new Date().toISOString();
   store.notes[note.id] = note;
   await writeStore(store);
   return { letter, note };
+}
+
+export async function deleteNote(profileId: string, noteId: string) {
+  const store = await readStore();
+  const note = store.notes[noteId];
+
+  if (!note || note.profileId !== profileId) {
+    throw new Error("Note not found.");
+  }
+
+  if (note.lastSharedLetterId) {
+    delete store.letters[note.lastSharedLetterId];
+  }
+
+  delete store.notes[noteId];
+  await writeStore(store);
+}
+
+export async function unshareNote(profileId: string, noteId: string) {
+  const store = await readStore();
+  const note = store.notes[noteId];
+
+  if (!note || note.profileId !== profileId) {
+    throw new Error("Note not found.");
+  }
+
+  if (note.lastSharedLetterId) {
+    delete store.letters[note.lastSharedLetterId];
+    note.lastSharedLetterId = null;
+    note.updatedAt = new Date().toISOString();
+    store.notes[noteId] = note;
+    await writeStore(store);
+  }
+
+  return note;
 }
 
 export async function getSharedLetter(id: string) {

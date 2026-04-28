@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowBigLeft, Type, Grid, Square, Image as ImageIcon, X, Check, MousePointer2, GripVertical, Layers, Sticker, Brush, Eraser } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowBigLeft, Type, Grid, Square, Image as ImageIcon, X, MousePointer2, GripVertical, Layers, Sticker, Brush, Eraser } from "lucide-react";
 import type { Attachment, Note, PaperStyle } from "@/lib/types";
 
 const ATTACHMENT_BORDER_COLORS = [
@@ -22,15 +23,15 @@ type PublishViewProps = {
 
 export function PublishView({ noteId }: PublishViewProps) {
   const { profile, loading } = useProfile();
+  const router = useRouter();
   const [note, setNote] = useState<Note | null>(null);
   const [noteLoading, setNoteLoading] = useState(true);
-  
+
   const [paperStyle, setPaperStyle] = useState<PaperStyle>("plain");
   const [paperColor, setPaperColor] = useState("#ffffff");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [editingAttachmentId, setEditingAttachmentId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [shareUrl, setShareUrl] = useState("");
   const [draggedLayerIndex, setDraggedLayerIndex] = useState<number | null>(null);
 
   // Drawing Mode State
@@ -53,11 +54,18 @@ export function PublishView({ noteId }: PublishViewProps) {
         return;
       }
       const data = (await response.json()) as { note: Note };
+
+      // Live letters are managed from the home modal — redirect away.
+      if (data.note.lastSharedLetterId) {
+        router.replace("/");
+        return;
+      }
+
       setNote(data.note);
       setAttachments(data.note.attachments ?? []);
       setNoteLoading(false);
     })();
-  }, [noteId, profile]);
+  }, [noteId, profile, router]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -190,7 +198,7 @@ export function PublishView({ noteId }: PublishViewProps) {
       const response = await fetch(`/api/notes/${note.id}/share`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           profileId: profile.id,
           paperStyle,
           paperColor,
@@ -200,11 +208,11 @@ export function PublishView({ noteId }: PublishViewProps) {
 
       if (!response.ok) throw new Error("Unable to publish.");
 
-      const data = (await response.json()) as { letter: { id: string } };
-      setShareUrl(`${window.location.origin}/l/${data.letter.id}`);
+      // Once published, management lives on the home dashboard modal.
+      // Hard-navigate so the dashboard refetches and reflects the live state.
+      window.location.href = "/";
     } catch (err) {
       console.error(err);
-    } finally {
       setIsPublishing(false);
     }
   };
@@ -463,29 +471,14 @@ export function PublishView({ noteId }: PublishViewProps) {
               </section>
 
               <div className="publish-actions">
-                <button 
-                  className="primary-button full-width" 
+                <button
+                  className="primary-button full-width"
                   onClick={handlePublish}
                   disabled={isPublishing}
                 >
-                  {isPublishing ? "Publishing..." : "Create Link"}
+                  {isPublishing ? "Publishing..." : "Publish"}
                 </button>
               </div>
-
-              {shareUrl && (
-                <div className="share-card-compact">
-                  <span className="field-label">Link Ready!</span>
-                  <div className="share-row">
-                    <input readOnly value={shareUrl} />
-                    <button
-                      className="ghost-button"
-                      onClick={() => navigator.clipboard.writeText(shareUrl)}
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </aside>

@@ -771,6 +771,16 @@ h2 {
   border-color: var(--line-strong);
 }
 
+.primary-button:disabled,
+.primary-link:disabled,
+.ghost-button:disabled,
+.ghost-link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+  pointer-events: none;
+}
+
 .back-button {
   width: 40px;
   padding: 0 !important;
@@ -837,6 +847,7 @@ h2 {
   border-color: #86efac;
   color: #166534;
 }
+
 
 .character-chip.active {
   background: var(--accent);
@@ -1326,6 +1337,7 @@ h2 {
   white-space: nowrap;
   vertical-align: bottom;
   line-height: 44px;
+  max-width: 100%;
 }
 
 .glyph-editor .glyph-space {

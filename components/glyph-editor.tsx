@@ -28,11 +28,20 @@ function buildCharNode(char: string, glyphs: GlyphMap): HTMLElement {
   return span;
 }
 
+// Use a transparent IMG (instead of an empty contenteditable=false span) so
+// the browser treats spaces atomically, identical to how glyph images
+// already work — backspace deletes them cleanly and the caret sits at the
+// same line-box height instead of growing.
+const TRANSPARENT_PIXEL =
+  "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+
 function buildSpaceNode(): HTMLElement {
-  const span = document.createElement("span");
-  span.className = "glyph-space";
-  span.contentEditable = "false";
-  return span;
+  const img = document.createElement("img");
+  img.className = "glyph-space";
+  img.src = TRANSPARENT_PIXEL;
+  img.alt = " ";
+  img.draggable = false;
+  return img;
 }
 
 function renderStringToDOM(container: HTMLElement, text: string, glyphs: GlyphMap) {
@@ -67,6 +76,40 @@ function isAtomicElement(el: HTMLElement): boolean {
   if (el.tagName === "BR" || el.tagName === "IMG") return true;
   if (el.classList.contains("glyph-space")) return true;
   return false;
+}
+
+// Words are inline-block + nowrap so the caret and space handling stay
+// reliable, but that means long words can overflow horizontally. Walk each
+// word and, if it's wider than the editor, peel characters from its end
+// into successive sibling words until everything fits.
+function splitOverflowingWords(editor: HTMLElement) {
+  const editorWidth = editor.clientWidth;
+  if (editorWidth <= 0) return;
+  const targetWidth = editorWidth - 4;
+
+  let safety = 200;
+  let changed = true;
+  while (changed && safety-- > 0) {
+    changed = false;
+    const words = editor.querySelectorAll<HTMLElement>(".glyph-word");
+    for (const word of words) {
+      if (word.offsetWidth <= targetWidth) continue;
+      if (word.children.length <= 1) continue;
+
+      const newWord = document.createElement("span");
+      newWord.className = "glyph-word";
+      word.insertAdjacentElement("afterend", newWord);
+
+      while (word.offsetWidth > targetWidth && word.children.length > 1) {
+        const lastChild = word.lastElementChild;
+        if (!lastChild) break;
+        newWord.insertBefore(lastChild, newWord.firstChild);
+      }
+
+      changed = true;
+      break;
+    }
+  }
 }
 
 function collapseLeadingSpaces(editor: HTMLElement) {
@@ -111,11 +154,6 @@ function serializeDOM(container: HTMLElement): string {
 
     if (el.tagName === "IMG") {
       result += el.getAttribute("alt") ?? "";
-      return;
-    }
-
-    if (el.classList.contains("glyph-space")) {
-      result += " ";
       return;
     }
 
@@ -277,6 +315,7 @@ export function GlyphEditor({
     const text = serializeDOM(editor);
     const caretIndex = getCaretCharIndex(editor);
     renderStringToDOM(editor, text, glyphsRef.current);
+    splitOverflowingWords(editor);
     placeCaretAtCharIndex(editor, caretIndex);
     collapseLeadingSpaces(editor);
 
@@ -294,7 +333,15 @@ export function GlyphEditor({
     if (value === lastEmittedValue.current) {
       return;
     }
+    // Preserve caret across external value changes so a re-hydration or
+    // sync from Convex doesn't drop the user back to the start of the doc.
+    const isFocused = document.activeElement === editor;
+    const caretIndex = isFocused ? getCaretCharIndex(editor) : 0;
     renderStringToDOM(editor, value, glyphsRef.current);
+    splitOverflowingWords(editor);
+    if (isFocused) {
+      placeCaretAtCharIndex(editor, Math.min(caretIndex, value.length));
+    }
     collapseLeadingSpaces(editor);
     lastEmittedValue.current = value;
   }, [value]);
@@ -305,6 +352,7 @@ export function GlyphEditor({
       return;
     }
     const observer = new ResizeObserver(() => {
+      splitOverflowingWords(editor);
       collapseLeadingSpaces(editor);
     });
     observer.observe(editor);
@@ -348,6 +396,69 @@ export function GlyphEditor({
         normalize();
         return;
       }
+
+      // Explicit deletion handling — operate on the text model rather than
+      // letting the browser fight contenteditable atomic elements.
+      if (
+        type === "deleteContentBackward" ||
+        type === "deleteContentForward" ||
+        type === "deleteByCut" ||
+        type === "deleteWordBackward" ||
+        type === "deleteWordForward"
+      ) {
+        const editor = node;
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const range = sel.getRangeAt(0);
+
+        event.preventDefault();
+        const text = serializeDOM(editor);
+        const startIdx = getCaretCharIndex(editor);
+
+        let from = startIdx;
+        let to = startIdx;
+
+        if (!range.collapsed) {
+          // For a real selection, compute the selection's char range.
+          const endRange = document.createRange();
+          endRange.selectNodeContents(editor);
+          endRange.setEnd(range.endContainer, range.endOffset);
+          const endTemp = document.createElement("div");
+          endTemp.appendChild(endRange.cloneContents());
+          to = serializeDOM(endTemp).length;
+        } else if (type === "deleteContentBackward") {
+          if (startIdx === 0) return;
+          from = startIdx - 1;
+        } else if (type === "deleteWordBackward") {
+          if (startIdx === 0) return;
+          let i = startIdx - 1;
+          while (i > 0 && /\s/.test(text[i])) i -= 1;
+          while (i > 0 && !/\s/.test(text[i - 1])) i -= 1;
+          from = i;
+        } else if (type === "deleteContentForward") {
+          if (startIdx === text.length) return;
+          to = startIdx + 1;
+        } else if (type === "deleteWordForward") {
+          if (startIdx === text.length) return;
+          let i = startIdx;
+          while (i < text.length && /\s/.test(text[i])) i += 1;
+          while (i < text.length && !/\s/.test(text[i])) i += 1;
+          to = i;
+        }
+
+        if (from === to) return;
+        const newText = text.slice(0, from) + text.slice(to);
+        renderStringToDOM(editor, newText, glyphsRef.current);
+        splitOverflowingWords(editor);
+        placeCaretAtCharIndex(editor, from);
+        collapseLeadingSpaces(editor);
+
+        if (newText !== lastEmittedValue.current) {
+          lastEmittedValue.current = newText;
+          onChange(newText);
+        }
+        return;
+      }
     };
 
     const handleInput = () => {
@@ -361,7 +472,7 @@ export function GlyphEditor({
       node.removeEventListener("beforeinput", handleBeforeInput);
       node.removeEventListener("input", handleInput);
     };
-  }, [normalize]);
+  }, [normalize, onChange]);
 
   return (
     <div

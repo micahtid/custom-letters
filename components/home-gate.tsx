@@ -93,7 +93,7 @@ const DECORATIONS: Decor[] = [
     paperStyle: "plain",
     color: "#fdf2f8",
     style: { top: "55%", left: "4%", transform: "rotate(15deg)" },
-    lines: [100, 80, 90, 60, 95]
+    lines: []
   },
   {
     // Envelope C — bottom-right, more tilt

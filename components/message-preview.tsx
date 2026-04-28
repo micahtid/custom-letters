@@ -656,6 +656,32 @@ export function MessagePreview({
       }, 0);
     };
 
+    // If a single word is wider than the available band, slice it so the
+    // longest prefix that still fits stays on this band; the remainder is
+    // queued back into lineWords to wrap onto the next band.
+    const splitWordToFit = (
+      word: string,
+      maxWidth: number
+    ): { prefix: string; suffix: string } => {
+      const chars = Array.from(word);
+      let lastFittingPrefix = "";
+      for (let i = 1; i <= chars.length; i += 1) {
+        const candidate = chars.slice(0, i).join("");
+        if (getWordWidth(candidate) <= maxWidth) {
+          lastFittingPrefix = candidate;
+        } else {
+          break;
+        }
+      }
+      if (lastFittingPrefix === "" && chars.length > 0) {
+        lastFittingPrefix = chars[0];
+      }
+      return {
+        prefix: lastFittingPrefix,
+        suffix: word.slice(lastFittingPrefix.length)
+      };
+    };
+
     const advanceToNextPage = () => {
       currentPageIndex += 1;
       return (currentPageIndex * pageHeight) + padding;
@@ -733,9 +759,23 @@ export function MessagePreview({
 
         if (!placedWordOnBand) {
           const firstSegment = segments[0];
+          const segmentWidth = firstSegment.end - firstSegment.start;
           const word = lineWords[wordIndex];
-          words.push({ word, x: firstSegment.start, y: bandTop });
-          wordIndex += 1;
+
+          if (getWordWidth(word) > segmentWidth) {
+            // Word doesn't fit even on its own — split at character
+            // boundary, place the prefix here, requeue the suffix.
+            const { prefix, suffix } = splitWordToFit(word, segmentWidth);
+            words.push({ word: prefix, x: firstSegment.start, y: bandTop });
+            if (suffix.length > 0) {
+              lineWords[wordIndex] = suffix;
+            } else {
+              wordIndex += 1;
+            }
+          } else {
+            words.push({ word, x: firstSegment.start, y: bandTop });
+            wordIndex += 1;
+          }
         }
 
         if (wordIndex < lineWords.length) {
@@ -874,10 +914,10 @@ export function MessagePreview({
                       <span
                         key={`${placedWord.word}-${char}-${charIndex}`}
                         className="fallback-char"
-                        style={{ 
-                          height: lineHeight, 
+                        style={{
+                          height: lineHeight,
                           lineHeight: `${lineHeight}px`,
-                          fontSize: `${lineHeight * 0.33}px` 
+                          fontSize: `${lineHeight * 0.52}px`
                         }}
                       >
                         {char}

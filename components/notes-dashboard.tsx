@@ -104,14 +104,21 @@ export function NotesDashboard() {
     }
   };
 
+  if (creating) {
+    return (
+      <main className="simple-shell">
+        <div className="loader-container">
+          <div className="loader" />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="page-shell">
       <header className="page-header">
         <div>
           <h1>Your Notes</h1>
-          <p className="muted-copy">
-            Open a draft, keep writing, or make a new note.
-          </p>
         </div>
         <div className="header-actions">
           <Link href="/characters" className="ghost-link">
@@ -120,17 +127,17 @@ export function NotesDashboard() {
           <button
             type="button"
             className="ghost-button"
-            onClick={() => void signOut()}
-          >
-            Sign out
-          </button>
-          <button
-            type="button"
-            className="primary-button"
             onClick={handleCreate}
             disabled={creating}
           >
             {creating ? "Creating..." : "New note"}
+          </button>
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => void signOut()}
+          >
+            Sign out
           </button>
         </div>
       </header>

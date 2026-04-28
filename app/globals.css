@@ -243,15 +243,188 @@ h2 {
   box-shadow: var(--shadow-strong);
 }
 
-.sign-in-card {
+.login-shell {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.login-decor-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
+  padding: 0 24px;
+  max-width: 520px;
+}
+
+.login-content h1 {
+  font-size: clamp(28px, 5vw, 56px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  margin: 0 0 18px;
+}
+
+.login-content p {
+  max-width: 360px;
+  margin: 0 0 18px;
+}
+
+.login-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Decorative cards (letters + envelopes) scattered across the screen */
+.decor-card {
+  position: absolute;
+  box-shadow:
+    0 14px 32px rgba(15, 23, 42, 0.12),
+    0 2px 4px rgba(15, 23, 42, 0.06);
+  border-radius: 4px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.decor-card--letter {
+  width: 220px;
+  height: 280px;
+  padding: 32px 22px 22px;
+}
+
+/* Lined paper — horizontal ruling */
+.decor-card--letter.style-lined {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 27px,
+    rgba(120, 145, 180, 0.4) 27px,
+    rgba(120, 145, 180, 0.4) 28px
+  );
+  background-position: 0 24px;
+  background-repeat: repeat;
+}
+
+/* Grid paper — square grid */
+.decor-card--letter.style-grid {
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      rgba(140, 140, 140, 0.3) 0px,
+      rgba(140, 140, 140, 0.3) 1px,
+      transparent 1px,
+      transparent 22px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(140, 140, 140, 0.3) 0px,
+      rgba(140, 140, 140, 0.3) 1px,
+      transparent 1px,
+      transparent 22px
+    );
+}
+
+.decor-letter-lines {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
-.sign-in-card .primary-button {
-  margin-top: 8px;
+.decor-letter-line {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(60, 70, 90, 0.35);
+}
+
+.decor-card--envelope {
+  width: 240px;
+  height: 150px;
+  background: var(--env-color, #f5e9d0);
+}
+
+/* The V-flap of the envelope (back view, sealed) — top half. */
+.decor-envelope-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: var(--flap-color, #ebd9b5);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+/* Postage stamp + postmark, mirrored from the real envelope-reveal. */
+.decor-postage,
+.decor-postmark {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.18));
+}
+
+.decor-postage {
+  width: 18%;
+  aspect-ratio: 22 / 25;
+  z-index: 1;
+}
+
+.decor-postmark {
+  width: 18%;
+  aspect-ratio: 1 / 1;
+  filter: none;
+  opacity: 0.8;
+  z-index: 2;
+}
+
+.decor-postage svg,
+.decor-postmark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* Translucent washi-tape strips on each card corner */
+.decor-tape {
+  position: absolute;
+  width: 64px;
+  height: 18px;
+  background: rgba(244, 211, 94, 0.5);
+  border-left: 1px dashed rgba(244, 211, 94, 0.25);
+  border-right: 1px dashed rgba(244, 211, 94, 0.25);
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .decor-card--letter {
+    width: 160px;
+    height: 200px;
+    padding: 20px 16px;
+  }
+  .decor-letter-lines {
+    gap: 12px;
+  }
+  .decor-card--envelope {
+    width: 180px;
+    height: 112px;
+  }
+  .decor-tape {
+    width: 48px;
+    height: 14px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -304,7 +477,7 @@ h2 {
 .notes-grid {
   display: grid;
   gap: var(--gap-xl);
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
 @media (max-width: 480px) {
@@ -2000,10 +2173,80 @@ h2 {
   .editor-layout {
     grid-template-columns: 1fr;
   }
-  
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+    margin-bottom: 28px;
+  }
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE — consolidated fixes
+   ============================================================ */
+
+/* Notes grid: smaller min-column so two cards fit on tablets */
+@media (max-width: 768px) {
+  .notes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}
+
+/* Login decorations — hide mid-screen cards on tablet to stop
+   them overlapping the centered content */
+@media (max-width: 768px) {
+  /* mid-left envelope (#3) + lower-left letter (#5) */
+  .decor-card:nth-child(3),
+  .decor-card:nth-child(5) {
+    display: none;
+  }
+}
+
+/* On mobile, hide all decorations — content is the focus */
+@media (max-width: 640px) {
+  .login-decor-layer {
+    display: none;
+  }
+
+  .login-content {
+    padding: 0 32px;
+  }
+
+  .login-content h1 {
+    font-size: clamp(26px, 8vw, 40px);
+  }
+
+  /* Notes grid → single column earlier */
+  .notes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Give note cards a bit less vertical bulk */
+  .note-card {
+    min-height: 160px;
+  }
+
+  /* Publish sidebar full-width with less padding */
+  .publish-controls {
+    padding: 0;
+  }
+}
+
+/* Publish preview order already set at 768px — ensure controls
+   don't exceed viewport on very small screens */
+@media (max-width: 480px) {
+  .publish-layout {
+    gap: 24px;
+  }
+
+  .preview-container {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  /* Character manager: tighten the drawing section */
+  .active-character-card {
+    padding: 12px;
   }
 }

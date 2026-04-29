@@ -506,6 +506,8 @@ h2 {
 
 .note-card-body h2 {
   margin-bottom: 2px;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .note-snippet {
@@ -514,6 +516,8 @@ h2 {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
 }
 
 .note-date {
@@ -987,7 +991,6 @@ h2 {
   position: absolute;
   inset: 0;
   background: #cbd5e1;
-  border-radius: 6px;
   z-index: 0;
 }
 
@@ -995,7 +998,6 @@ h2 {
 .env__letter {
   position: absolute;
   inset: 5%;
-  border-radius: 6px;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
   z-index: 1;
   transform: translateY(0);
@@ -1008,7 +1010,6 @@ h2 {
   inset: 0;
   background: #e5e7eb;
   clip-path: polygon(0 0, 50% 50%, 100% 0, 100% 100%, 0 100%);
-  border-radius: 0 0 6px 6px;
   z-index: 3;
 }
 

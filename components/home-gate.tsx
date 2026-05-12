@@ -49,6 +49,7 @@ type EnvelopeDecor = {
   postageStyle: React.CSSProperties;
   postmarkStyle: React.CSSProperties;
   style: React.CSSProperties;
+  showPostmark?: boolean;
 };
 
 type Decor = LetterDecor | EnvelopeDecor;
@@ -79,7 +80,8 @@ const DECORATIONS: Decor[] = [
     stampColor: "#1f4173",
     style: { top: "26%", left: "-2%", transform: "rotate(13deg)" },
     postageStyle: { left: "12%", bottom: "10%", transform: "rotate(5deg)" },
-    postmarkStyle: { left: "24%", bottom: "14%", transform: "rotate(10deg)" }
+    postmarkStyle: { left: "24%", bottom: "14%", transform: "rotate(10deg)" },
+    showPostmark: false
   },
   {
     kind: "letter",
@@ -103,7 +105,8 @@ const DECORATIONS: Decor[] = [
     stampColor: "#3a3a3a",
     style: { top: "50%", right: "-3%", transform: "rotate(-11deg)" },
     postageStyle: { right: "8%", bottom: "8%", transform: "rotate(14deg)" },
-    postmarkStyle: { right: "22%", bottom: "12%", transform: "rotate(22deg)" }
+    postmarkStyle: { right: "22%", bottom: "12%", transform: "rotate(22deg)" },
+    showPostmark: false
   },
   {
     // Envelope D — bottom-center
@@ -151,7 +154,8 @@ function EnvelopeDecoration({
   stampColor,
   postageStyle,
   postmarkStyle,
-  style
+  style,
+  showPostmark = true
 }: EnvelopeDecor) {
   return (
     <div
@@ -188,42 +192,44 @@ function EnvelopeDecoration({
           />
         </svg>
       </span>
-      <span className="decor-postmark" style={postmarkStyle}>
-        <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <circle
-            cx="50"
-            cy="50"
-            r="46"
-            fill="none"
-            stroke="#2a1d18"
-            strokeWidth="2"
-          />
-          <circle
-            cx="50"
-            cy="50"
-            r="38"
-            fill="none"
-            stroke="#2a1d18"
-            strokeWidth="1.2"
-          />
-          <line
-            x1="16"
-            y1="44"
-            x2="84"
-            y2="44"
-            stroke="#2a1d18"
-            strokeWidth="0.8"
-          />
-          <line
-            x1="16"
-            y1="56"
-            x2="84"
-            y2="56"
-            stroke="#2a1d18"
-            strokeWidth="0.8"
-          />
-        </svg>
-      </span>
+      {showPostmark && (
+        <span className="decor-postmark" style={postmarkStyle}>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              stroke="#2a1d18"
+              strokeWidth="2"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="38"
+              fill="none"
+              stroke="#2a1d18"
+              strokeWidth="1.2"
+            />
+            <line
+              x1="16"
+              y1="44"
+              x2="84"
+              y2="44"
+              stroke="#2a1d18"
+              strokeWidth="0.8"
+            />
+            <line
+              x1="16"
+              y1="56"
+              x2="84"
+              y2="56"
+              stroke="#2a1d18"
+              strokeWidth="0.8"
+            />
+          </svg>
+        </span>
+      )}
     </div>
   );
 }
@@ -256,10 +262,13 @@ export function HomeGate() {
         </div>
 
         <div className="login-content">
-          <h1>Letters in your own hand.</h1>
+          <h1>
+            Mail that actually<br />
+            feels personal.
+          </h1>
           <p className="muted-copy">
-            A typed note says you sent it. A handwritten one says you meant
-            it. Penned makes the second as easy as the first.
+            Turn your handwriting into a font and send personal letters
+            as fast as typing.
           </p>
           <button
             type="button"

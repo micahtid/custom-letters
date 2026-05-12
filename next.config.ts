@@ -6,6 +6,6 @@ export default function nextConfig(phase: string): NextConfig {
 
   return {
     typedRoutes: true,
-    distDir: isDev ? ".next-dev" : ".next-prod"
+    distDir: isDev ? ".next-dev" : ".next"
   };
 }

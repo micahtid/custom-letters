@@ -1,7 +1,7 @@
 :root {
   /* Colors */
   --bg-default: #ffffff;
-  --bg-subtle: #f6f8fa;
+  --bg-subtle: #faf8f3;
   --text-primary: #2d3b45;
   --text-secondary: #6b7780;
   --accent: #111827;
@@ -271,10 +271,11 @@ h2 {
 }
 
 .login-content h1 {
-  font-size: clamp(28px, 5vw, 56px);
-  line-height: 1;
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 1.05;
   letter-spacing: -0.04em;
   margin: 0 0 18px;
+  text-wrap: balance;
 }
 
 .login-content p {

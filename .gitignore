@@ -5,7 +5,11 @@ node_modules
 data/store.json
 .env*.local
 .env
-convex/_generated
+# convex/_generated is committed so Vercel builds don't depend on codegen
+# running successfully during `convex deploy --cmd`. Regenerate locally
+# via `npx convex dev` (auto) or `npx convex codegen` (one-shot) when
+# you change schemas or function signatures, then commit the diff.
+convex/_generated/ai/ai-files.state.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

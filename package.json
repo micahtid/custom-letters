@@ -10,6 +10,7 @@
     "prebuild": "node scripts/clean-next.mjs",
     "build": "next build",
     "postbuild": "node scripts/ensure-build-id.mjs",
+    "vercel-build": "convex deploy --cmd 'npm run build'",
     "prestart": "node scripts/ensure-build-id.mjs",
     "start": "next start",
     "lint": "eslint ."

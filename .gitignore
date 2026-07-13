@@ -18,7 +18,29 @@ pnpm-debug.log*
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
 
-# Local agent/CLI state — never deploy
+# Local agent and CLI state. Never deploy this.
 .agents/
 .claude/
 skills-lock.json
+.gstack/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor and IDE settings
+.vscode/
+.idea/
+*.swp
+
+# Deploy platform
+.vercel
+
+# Secrets and certificates
+*.pem
+
+# Local debug and scratch artifacts
+scripts/inspect-*.py
+scripts/verify-envelope.py
+scripts/*.png

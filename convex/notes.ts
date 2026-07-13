@@ -42,11 +42,25 @@ export const get = query({
   }
 });
 
+// A user may keep at most this many notes at once; they must take one
+// down before starting another.
+export const MAX_NOTES_PER_USER = 10;
+
 export const create = mutation({
   args: {},
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated.");
+
+    const existing = await ctx.db
+      .query("notes")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    if (existing.length >= MAX_NOTES_PER_USER) {
+      throw new Error(
+        `You can keep up to ${MAX_NOTES_PER_USER} notes at a time. Take one down before making another.`
+      );
+    }
 
     const now = Date.now();
     return await ctx.db.insert("notes", {

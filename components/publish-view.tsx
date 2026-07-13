@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowBigLeft, Type, Grid, Square, Image as ImageIcon, X, MousePointer2, GripVertical, Layers, Sticker, Brush, Eraser } from "lucide-react";
+import { ArrowBigLeft, Type, Grid, Square, Image as ImageIcon, X, Pencil, GripVertical, Layers, Sticker, Brush, Eraser } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Attachment, GlyphMap, NoteId, PaperStyle } from "@/lib/types";
@@ -248,7 +248,7 @@ export function PublishView({ noteId }: PublishViewProps) {
       <main className="simple-shell">
         <section className="empty-state">
           <h1>Note not found.</h1>
-          <Link href="/" className="ghost-link back-button" aria-label="Back">
+          <Link href="/" className="ghost-link back-button" aria-label="Back" title="Back">
             <ArrowBigLeft />
           </Link>
         </section>
@@ -265,7 +265,7 @@ export function PublishView({ noteId }: PublishViewProps) {
           <h1>Publish Your Note</h1>
         </div>
         <div className="header-actions">
-          <Link href={`/notes/${noteId}`} className="ghost-link back-button" aria-label="Back to editor">
+          <Link href={`/notes/${noteId}`} className="ghost-link back-button" aria-label="Back to editor" title="Back to Editor">
             <ArrowBigLeft />
           </Link>
         </div>
@@ -312,6 +312,7 @@ export function PublishView({ noteId }: PublishViewProps) {
                       className={`color-btn ${editingAttachment?.borderColor === color ? "active" : ""}`}
                       style={{ backgroundColor: color }}
                       onClick={() => updateAttachment(editingAttachmentId, { borderColor: color })}
+                      title={`Border color ${color}`}
                       aria-label={`Border color ${color}`}
                     />
                   ))}
@@ -319,8 +320,19 @@ export function PublishView({ noteId }: PublishViewProps) {
               </div>
 
               <button
+                type="button"
+                className="ghost-button full-width"
+                onClick={() => setEditingAttachmentId(null)}
+                title="Back"
+              >
+                Back
+              </button>
+
+              <button
+                type="button"
                 className="primary-button full-width"
                 onClick={() => setEditingAttachmentId(null)}
+                title="Save Changes"
               >
                 Save Changes
               </button>
@@ -333,12 +345,15 @@ export function PublishView({ noteId }: PublishViewProps) {
                   {DRAWING_COLORS.map(c => (
                     <button
                       key={c}
+                      type="button"
                       className={`color-btn ${drawingColor === c && !isEraser ? "active" : ""}`}
                       style={{ backgroundColor: c }}
                       onClick={() => {
                         setDrawingColor(c);
                         setIsEraser(false);
                       }}
+                      title={`Pen color ${c}`}
+                      aria-label={`Pen color ${c}`}
                     />
                   ))}
                   <button
@@ -391,9 +406,12 @@ export function PublishView({ noteId }: PublishViewProps) {
                   {["#ffffff", "#fffbeb", "#f0f9ff", "#f5f5f5", "#fdf2f8"].map(color => (
                     <button
                       key={color}
+                      type="button"
                       className={`color-btn ${paperColor === color ? "active" : ""}`}
                       style={{ backgroundColor: color }}
                       onClick={() => setPaperColor(color)}
+                      title={`Paper color ${color}`}
+                      aria-label={`Paper color ${color}`}
                     />
                   ))}
                 </div>
@@ -469,10 +487,22 @@ export function PublishView({ noteId }: PublishViewProps) {
                             {a.type === "sticker" ? "Sticker" : "Image"} {a.number}
                           </span>
                           <div className="layer-actions">
-                            <button onClick={() => setEditingAttachmentId(a.id)} className={editingAttachmentId === a.id ? "active" : ""}>
-                              <MousePointer2 size={14} />
+                            <button
+                              type="button"
+                              onClick={() => setEditingAttachmentId(a.id)}
+                              className={editingAttachmentId === a.id ? "active" : ""}
+                              title="Edit"
+                              aria-label="Edit layer"
+                            >
+                              <Pencil size={14} />
                             </button>
-                            <button onClick={() => removeAttachment(a.id)} className="danger-text">
+                            <button
+                              type="button"
+                              onClick={() => removeAttachment(a.id)}
+                              className="danger-text"
+                              title="Delete"
+                              aria-label="Delete layer"
+                            >
                               <X size={14} />
                             </button>
                           </div>

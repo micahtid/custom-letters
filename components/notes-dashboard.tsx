@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Eraser, X } from "lucide-react";
+import { Check, Link2, Eraser, X } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { CHARACTERS } from "@/lib/alphabet";
@@ -27,6 +27,8 @@ export function NotesDashboard() {
 
   const loading = notes === undefined || glyphs === undefined;
   const glyphCount = glyphs?.length ?? 0;
+  const MAX_NOTES = 10;
+  const atNoteLimit = (notes?.length ?? 0) >= MAX_NOTES;
 
   const managingNote = managingNoteId
     ? notes?.find((n) => n._id === managingNoteId) ?? null
@@ -54,11 +56,17 @@ export function NotesDashboard() {
   };
 
   const handleCreate = async () => {
+    if (atNoteLimit) return;
     setCreating(true);
     try {
       const id = await createNote();
       router.push(`/notes/${id}`);
-    } catch {
+    } catch (err) {
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : "Could not create a new note."
+      );
       setCreating(false);
     }
   };
@@ -128,16 +136,22 @@ export function NotesDashboard() {
             type="button"
             className="ghost-button"
             onClick={handleCreate}
-            disabled={creating}
+            disabled={creating || atNoteLimit}
+            title={
+              atNoteLimit
+                ? `You can keep up to ${MAX_NOTES} notes at a time. Take one down before making another.`
+                : "New Note"
+            }
           >
-            {creating ? "Creating..." : "New note"}
+            {creating ? "Creating..." : "New Note"}
           </button>
           <button
             type="button"
             className="primary-button"
             onClick={() => void signOut()}
+            title="Sign Out"
           >
-            Sign out
+            Sign Out
           </button>
         </div>
       </header>
@@ -203,6 +217,9 @@ export function NotesDashboard() {
                           e.stopPropagation();
                           void handleCopyCardLink(note);
                         }}
+                        title={
+                          copiedCardId === note._id ? "Link Copied" : "Copy Link"
+                        }
                         aria-label={
                           copiedCardId === note._id
                             ? "Link copied"
@@ -212,7 +229,7 @@ export function NotesDashboard() {
                         {copiedCardId === note._id ? (
                           <Check size={16} />
                         ) : (
-                          <Copy size={16} />
+                          <Link2 size={16} />
                         )}
                       </button>
                     )}
@@ -223,6 +240,7 @@ export function NotesDashboard() {
                         e.stopPropagation();
                         void handleDelete(note);
                       }}
+                      title="Delete"
                       aria-label={`Delete ${note.title}`}
                     >
                       <Eraser size={16} />
@@ -250,6 +268,7 @@ export function NotesDashboard() {
               type="button"
               className="modal-close"
               onClick={closeModal}
+              title="Close"
               aria-label="Close"
             >
               <X size={18} />
@@ -274,9 +293,10 @@ export function NotesDashboard() {
                   type="button"
                   className="ghost-button manage-link-copy"
                   onClick={handleCopyLink}
+                  title={linkCopied ? "Link Copied" : "Copy Link"}
                   aria-label={linkCopied ? "Link copied" : "Copy link"}
                 >
-                  {linkCopied ? <Check size={16} /> : <Copy size={16} />}
+                  {linkCopied ? <Check size={16} /> : <Link2 size={16} />}
                 </button>
               </div>
             </div>

@@ -80,7 +80,7 @@ export function CharacterSetManager() {
           >
             Restart
           </button>
-          <Link href="/" className="ghost-link back-button" aria-label="Back">
+          <Link href="/" className="ghost-link back-button" aria-label="Back" title="Back">
             <ArrowBigLeft />
           </Link>
         </div>

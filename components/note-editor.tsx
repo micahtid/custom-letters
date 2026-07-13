@@ -75,6 +75,19 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     }
   };
 
+  // Auto-save a couple of seconds after the user stops editing. The timer
+  // resets on every keystroke, so it only fires once typing pauses. Live
+  // (published) notes are read-only here, so we never auto-save those.
+  const isLiveNote = Boolean(note?.lastSharedLetterId);
+  useEffect(() => {
+    if (!hydrated || !dirty || isLiveNote) return;
+    const timer = window.setTimeout(() => {
+      void saveNote();
+    }, 2000);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftTitle, draftMessage, hydrated, dirty, isLiveNote]);
+
   if (note === undefined || glyphs === undefined) {
     return (
       <main className="simple-shell">
@@ -90,7 +103,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
       <main className="simple-shell">
         <section className="empty-state">
           <h1>Note not found.</h1>
-          <Link href="/" className="ghost-link back-button" aria-label="Back">
+          <Link href="/" className="ghost-link back-button" aria-label="Back" title="Back">
             <ArrowBigLeft />
           </Link>
         </section>
@@ -118,16 +131,29 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
               type="button"
               className="primary-button"
               onClick={() => router.push(`/notes/${note._id}/publish`)}
+              title="Manage"
             >
               Manage
             </button>
           ) : (
             <>
+              <span className="save-status" aria-live="polite">
+                {saveState === "saving"
+                  ? "Saving…"
+                  : saveState === "saved"
+                    ? "Saved"
+                    : saveState === "error"
+                      ? "Save failed"
+                      : dirty
+                        ? "Unsaved changes"
+                        : ""}
+              </span>
               <button
                 type="button"
                 className="ghost-button"
                 onClick={saveNote}
                 disabled={!dirty || saveState === "saving"}
+                title="Save"
               >
                 Save
               </button>
@@ -135,12 +161,18 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
                 type="button"
                 className="primary-button"
                 onClick={() => router.push(`/notes/${note._id}/publish`)}
+                title="Publish"
               >
                 Publish
               </button>
             </>
           )}
-          <Link href="/" className="ghost-link back-button" aria-label="Back">
+          <Link
+            href="/"
+            className="ghost-link back-button"
+            aria-label="Back"
+            title="Back"
+          >
             <ArrowBigLeft />
           </Link>
         </div>

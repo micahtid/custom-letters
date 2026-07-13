@@ -266,8 +266,9 @@ h2 {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 0 24px;
-  max-width: 520px;
+  padding: 24px;
+  width: 100%;
+  max-width: 680px;
 }
 
 .login-content h1 {
@@ -279,8 +280,9 @@ h2 {
 }
 
 .login-content p {
-  max-width: 360px;
-  margin: 0 0 18px;
+  max-width: 440px;
+  margin: 0 0 20px;
+  font-size: var(--fs-xl);
 }
 
 .login-button {
@@ -288,14 +290,25 @@ h2 {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  margin: 12px 0;
+}
+
+/* Demo video placeholder — width is also capped by viewport height
+   (16:9, minus room for the hero text) so hero + video always fit
+   on one screen without scrolling */
+.login-video {
+  margin-top: 36px;
+  width: min(640px, 100%, calc((100vh - 320px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: var(--radius-2xl);
+  box-shadow: none;
 }
 
 /* Decorative cards (letters + envelopes) scattered across the screen */
 .decor-card {
   position: absolute;
-  box-shadow:
-    0 14px 32px rgba(15, 23, 42, 0.12),
-    0 2px 4px rgba(15, 23, 42, 0.06);
+  box-shadow: none;
   border-radius: 4px;
   border: 1px solid rgba(15, 23, 42, 0.06);
 }
@@ -373,7 +386,7 @@ h2 {
 .decor-postmark {
   position: absolute;
   pointer-events: none;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.18));
+  filter: none;
 }
 
 .decor-postage {
@@ -966,7 +979,7 @@ h2 {
   position: relative;
   cursor: grab;
   perspective: 1000px;
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.07));
+  filter: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
   user-select: none;
@@ -999,7 +1012,7 @@ h2 {
 .env__letter {
   position: absolute;
   inset: 5%;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
+  box-shadow: none;
   z-index: 1;
   transform: translateY(0);
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), z-index 0.6s;
@@ -1032,7 +1045,7 @@ h2 {
   bottom: 14%;
   z-index: 6;
   pointer-events: none;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.18));
+  filter: none;
 }
 
 .env__stamp--right {
@@ -1445,12 +1458,12 @@ h2 {
 }
 
 .attachment-overlay.is-editing {
-  box-shadow: 0 0 0 2px var(--accent), 0 4px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
 .attachment-overlay.is-dragging {
   opacity: 0.9;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
 }
 
 .attachment-image {
@@ -1629,7 +1642,7 @@ h2 {
   display: grid;
   place-items: center;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   color: var(--text-primary);
   transition: all 0.2s ease;
 }

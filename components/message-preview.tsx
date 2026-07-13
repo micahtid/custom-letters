@@ -867,7 +867,7 @@ export function MessagePreview({
             height: `${pageHeight}px`,
             overflow: "hidden",
             display: "block",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+            boxShadow: "none",
             borderRadius: "4px",
             flexShrink: 0,
             padding: 0

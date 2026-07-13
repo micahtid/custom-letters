@@ -59,7 +59,7 @@ const DECORATIONS: Decor[] = [
     kind: "letter",
     paperStyle: "lined",
     color: "#ffffff",
-    style: { top: "5%", left: "4%", transform: "rotate(-8deg)" },
+    style: { top: "5%", left: "-3%", transform: "rotate(-8deg)" },
     lines: []
   },
   {
@@ -68,7 +68,7 @@ const DECORATIONS: Decor[] = [
     color: "#f5e9d0",
     flapColor: "#ebd9b5",
     stampColor: "#a8443a",
-    style: { top: "7%", right: "6%", transform: "rotate(9deg)" },
+    style: { top: "7%", right: "-2%", transform: "rotate(9deg)" },
     postageStyle: { right: "12%", bottom: "10%", transform: "rotate(-3deg)" },
     postmarkStyle: { right: "24%", bottom: "14%", transform: "rotate(-12deg)" }
   },
@@ -78,7 +78,7 @@ const DECORATIONS: Decor[] = [
     color: "#dceaf5",
     flapColor: "#c7dcee",
     stampColor: "#1f4173",
-    style: { top: "26%", left: "-2%", transform: "rotate(13deg)" },
+    style: { top: "26%", left: "-8%", transform: "rotate(13deg)" },
     postageStyle: { left: "12%", bottom: "10%", transform: "rotate(5deg)" },
     postmarkStyle: { left: "24%", bottom: "14%", transform: "rotate(10deg)" },
     showPostmark: false
@@ -87,14 +87,14 @@ const DECORATIONS: Decor[] = [
     kind: "letter",
     paperStyle: "grid",
     color: "#f5f5f5",
-    style: { top: "22%", right: "5%", transform: "rotate(-7deg)" },
+    style: { top: "22%", right: "-3%", transform: "rotate(-7deg)" },
     lines: []
   },
   {
     kind: "letter",
     paperStyle: "plain",
     color: "#fdf2f8",
-    style: { top: "55%", left: "4%", transform: "rotate(15deg)" },
+    style: { top: "55%", left: "-3%", transform: "rotate(15deg)" },
     lines: []
   },
   {
@@ -103,7 +103,7 @@ const DECORATIONS: Decor[] = [
     color: "#f3d6d2",
     flapColor: "#e9c2bc",
     stampColor: "#3a3a3a",
-    style: { top: "50%", right: "-3%", transform: "rotate(-11deg)" },
+    style: { top: "50%", right: "-9%", transform: "rotate(-11deg)" },
     postageStyle: { right: "8%", bottom: "8%", transform: "rotate(14deg)" },
     postmarkStyle: { right: "22%", bottom: "12%", transform: "rotate(22deg)" },
     showPostmark: false
@@ -114,7 +114,7 @@ const DECORATIONS: Decor[] = [
     color: "#f5e9d0",
     flapColor: "#ebd9b5",
     stampColor: "#0f6e4f",
-    style: { bottom: "6%", left: "10%", transform: "rotate(-6deg)" },
+    style: { bottom: "6%", left: "2%", transform: "rotate(-6deg)" },
     postageStyle: { left: "38%", bottom: "8%", transform: "rotate(-8deg)" },
     postmarkStyle: { left: "28%", bottom: "13%", transform: "rotate(6deg)" }
   },
@@ -122,7 +122,7 @@ const DECORATIONS: Decor[] = [
     kind: "letter",
     paperStyle: "lined",
     color: "#fffbeb",
-    style: { bottom: "8%", right: "6%", transform: "rotate(8deg)" },
+    style: { bottom: "8%", right: "-2%", transform: "rotate(8deg)" },
     lines: []
   }
 ];
@@ -263,12 +263,12 @@ export function HomeGate() {
 
         <div className="login-content">
           <h1>
-            Mail that actually<br />
-            feels personal.
+            Letters in Your Handwriting,<br />
+            Sent in Seconds.
           </h1>
           <p className="muted-copy">
-            Turn your handwriting into a font and send personal letters
-            as fast as typing.
+            Penned turns your handwriting into a font. Write a letter,
+            seal the envelope, and share it with a link.
           </p>
           <button
             type="button"
@@ -276,8 +276,9 @@ export function HomeGate() {
             onClick={() => void signIn("google")}
           >
             <FcGoogle size={18} />
-            <span>Google Login</span>
+            <span>Continue with Google</span>
           </button>
+          <div className="login-video" aria-label="Product demo video" />
         </div>
       </main>
     );

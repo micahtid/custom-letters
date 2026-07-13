@@ -46,8 +46,8 @@ export default defineSchema({
     createdAt: v.number()
   }).index("by_note", ["noteId"]),
 
-  // Per-letter glyph snapshots — split out of `letters` so each document
-  // stays comfortably under the 1MB Convex doc limit.
+  // Per-letter glyph snapshots. These are split out of `letters` so each
+  // document stays comfortably under the 1MB Convex document limit.
   letterGlyphs: defineTable({
     letterId: v.id("letters"),
     character: v.string(),

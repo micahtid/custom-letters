@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { ArrowBigLeft, Type, Grid, Square, Image as ImageIcon, X, Pencil, GripVertical, Layers, Sticker, Brush, Eraser } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import type { Attachment, GlyphMap, NoteId, PaperStyle } from "@/lib/types";
+import type { Attachment, NoteId, PaperStyle } from "@/lib/types";
+import { buildGlyphMap } from "@/lib/glyphs";
 
 const ATTACHMENT_BORDER_COLORS = [
   "#ffffff",
@@ -59,89 +60,54 @@ export function PublishView({ noteId }: PublishViewProps) {
     }
   }, [note, hydratedAttachments, router]);
 
-  const glyphMap: GlyphMap = useMemo(() => {
-    const map: GlyphMap = {};
-    for (const g of glyphs ?? []) {
-      map[g.character] = {
-        character: g.character,
-        dataUrl: g.dataUrl,
-        updatedAt: g.updatedAt
-      };
-    }
-    return map;
-  }, [glyphs]);
+  const glyphMap = useMemo(() => buildGlyphMap(glyphs), [glyphs]);
 
   // Cap raw upload size to keep the published note under Convex's 1MB
   // document limit. Base64 encoding inflates payloads ~33%, and a single
   // letter can have several attachments stacked.
   const MAX_UPLOAD_BYTES = 500 * 1024;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Images and stickers upload the same way. They only differ in their default
+  // border and shadow and in how their layer number is counted, so both inputs
+  // route through here.
+  const handleUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "image" | "sticker"
+  ) => {
+    const inputRef = type === "image" ? fileInputRef : stickerInputRef;
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_UPLOAD_BYTES) {
+      const label = type === "image" ? "Image" : "Sticker";
       window.alert(
-        `Image is too large (${Math.round(file.size / 1024)} KB). Please choose one under ${MAX_UPLOAD_BYTES / 1024} KB.`
+        `${label} is too large (${Math.round(file.size / 1024)} KB). Please choose one under ${MAX_UPLOAD_BYTES / 1024} KB.`
       );
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (inputRef.current) inputRef.current.value = "";
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
-      const nextNumber = Math.max(0, ...attachments.filter(a => a.type === "image").map(a => a.number)) + 1;
+      const nextNumber =
+        Math.max(0, ...attachments.filter(a => a.type === type).map(a => a.number)) + 1;
       const newAttachment: Attachment = {
         id: Math.random().toString(36).substring(7),
-        type: "image",
+        type,
         dataUrl,
         x: 10,
         y: 10,
         width: 30,
         rotation: 0,
-        borderColor: ATTACHMENT_BORDER_COLORS[0],
-        shadow: 4,
+        borderColor: type === "image" ? ATTACHMENT_BORDER_COLORS[0] : "transparent",
+        shadow: type === "image" ? 4 : 0,
         number: nextNumber
       };
       setAttachments(prev => [...prev, newAttachment]);
       setEditingAttachmentId(newAttachment.id);
     };
     reader.readAsDataURL(file);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleStickerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > MAX_UPLOAD_BYTES) {
-      window.alert(
-        `Sticker is too large (${Math.round(file.size / 1024)} KB). Please choose one under ${MAX_UPLOAD_BYTES / 1024} KB.`
-      );
-      if (stickerInputRef.current) stickerInputRef.current.value = "";
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      const nextNumber = Math.max(0, ...attachments.filter(a => a.type === "sticker").map(a => a.number)) + 1;
-      const newAttachment: Attachment = {
-        id: Math.random().toString(36).substring(7),
-        type: "sticker",
-        dataUrl,
-        x: 10,
-        y: 10,
-        width: 30,
-        rotation: 0,
-        borderColor: "transparent",
-        shadow: 0,
-        number: nextNumber
-      };
-      setAttachments(prev => [...prev, newAttachment]);
-      setEditingAttachmentId(newAttachment.id);
-    };
-    reader.readAsDataURL(file);
-    if (stickerInputRef.current) stickerInputRef.current.value = "";
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   const handleDrawingSave = (dataUrl: string) => {
@@ -450,14 +416,14 @@ export function PublishView({ noteId }: PublishViewProps) {
                   accept="image/*"
                   hidden
                   ref={fileInputRef}
-                  onChange={handleFileUpload}
+                  onChange={(e) => handleUpload(e, "image")}
                 />
                 <input
                   type="file"
                   accept="image/*"
                   hidden
                   ref={stickerInputRef}
-                  onChange={handleStickerUpload}
+                  onChange={(e) => handleUpload(e, "sticker")}
                 />
 
                 <div className="layers-panel">

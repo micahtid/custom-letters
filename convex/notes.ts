@@ -1,6 +1,7 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { Id } from "./_generated/dataModel";
 
 const attachment = v.object({
   id: v.string(),
@@ -14,6 +15,22 @@ const attachment = v.object({
   shadow: v.number(),
   number: v.number()
 });
+
+// Delete a published letter along with its glyph snapshots. Taking a letter
+// down means removing both, so this keeps the three call sites in sync.
+async function deleteLetterWithSnapshots(
+  ctx: MutationCtx,
+  letterId: Id<"letters">
+) {
+  const snapshots = await ctx.db
+    .query("letterGlyphs")
+    .withIndex("by_letter", (q) => q.eq("letterId", letterId))
+    .collect();
+  for (const snapshot of snapshots) {
+    await ctx.db.delete(snapshot._id);
+  }
+  await ctx.db.delete(letterId);
+}
 
 export const list = query({
   args: {},
@@ -87,16 +104,10 @@ export const update = mutation({
     const note = await ctx.db.get(id);
     if (!note || note.userId !== userId) throw new Error("Note not found.");
 
-    // Editing a note takes down its published letter — we only allow
-    // one publishable link per letter, and it must reflect the latest content.
+    // Editing a note takes down its published letter. We allow only one
+    // link per letter, and that link must reflect the latest content.
     if (note.lastSharedLetterId) {
-      const letterId = note.lastSharedLetterId;
-      const snapshots = await ctx.db
-        .query("letterGlyphs")
-        .withIndex("by_letter", (q) => q.eq("letterId", letterId))
-        .collect();
-      for (const s of snapshots) await ctx.db.delete(s._id);
-      await ctx.db.delete(letterId);
+      await deleteLetterWithSnapshots(ctx, note.lastSharedLetterId);
     }
 
     await ctx.db.patch(id, {
@@ -118,13 +129,7 @@ export const remove = mutation({
     if (!note || note.userId !== userId) throw new Error("Note not found.");
 
     if (note.lastSharedLetterId) {
-      const letterId = note.lastSharedLetterId;
-      const snapshots = await ctx.db
-        .query("letterGlyphs")
-        .withIndex("by_letter", (q) => q.eq("letterId", letterId))
-        .collect();
-      for (const s of snapshots) await ctx.db.delete(s._id);
-      await ctx.db.delete(letterId);
+      await deleteLetterWithSnapshots(ctx, note.lastSharedLetterId);
     }
 
     await ctx.db.delete(id);
@@ -145,10 +150,10 @@ export const share = mutation({
     const note = await ctx.db.get(id);
     if (!note || note.userId !== userId) throw new Error("Note not found.");
 
-    // Reuse the existing letter id when republishing so the public URL
-    // stays stable. Content edits go through `update`, which clears the
-    // letter first — so by the time we get here, the letter (if any)
-    // only differs in publish settings.
+    // Reuse the existing letter id when republishing so the public URL stays
+    // stable. Content edits go through `update`, which clears the letter
+    // first, so by the time we get here the letter only differs in its
+    // publish settings.
     const previousLetterId = note.lastSharedLetterId;
     const previousLetter = previousLetterId
       ? await ctx.db.get(previousLetterId)
@@ -215,14 +220,7 @@ export const unshare = mutation({
     if (!note || note.userId !== userId) throw new Error("Note not found.");
 
     if (note.lastSharedLetterId) {
-      const letterId = note.lastSharedLetterId;
-      const snapshots = await ctx.db
-        .query("letterGlyphs")
-        .withIndex("by_letter", (q) => q.eq("letterId", letterId))
-        .collect();
-      for (const s of snapshots) await ctx.db.delete(s._id);
-      await ctx.db.delete(letterId);
-
+      await deleteLetterWithSnapshots(ctx, note.lastSharedLetterId);
       await ctx.db.patch(id, {
         lastSharedLetterId: null,
         updatedAt: Date.now()

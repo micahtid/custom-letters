@@ -27,8 +27,8 @@ export type Note = Doc<"notes">;
 export type NoteId = Id<"notes">;
 export type LetterId = Id<"letters">;
 
-// Shape returned by `convex/letters.getPublic` — the public letter view
-// reads this, no auth required.
+// Shape returned by `convex/letters.getPublic`. The public letter page reads
+// this, and it needs no auth.
 export type PublicLetter = {
   id: LetterId;
   noteId: NoteId;

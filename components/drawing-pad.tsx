@@ -414,7 +414,7 @@ export function DrawingPad({ label, onSave }: DrawingPadProps) {
     //       natural boundary, preserving the dot's intended size.
     // Both regimes feed the SAME rendering formula below, so edge quality is
     // identical across all glyphs. This is the core idea behind signed distance
-    // field (SDF) glyph rendering — Chris Green, Valve, SIGGRAPH 2007.
+    // field (SDF) glyph rendering, from Chris Green, Valve, SIGGRAPH 2007.
     const distField = new Float32Array(outputWidth * NORMALIZED_HEIGHT);
     let renderRadius: number;
 
@@ -425,7 +425,7 @@ export function DrawingPad({ label, onSave }: DrawingPadProps) {
       renderRadius = TARGET_STORED_STROKE / 2;
     } else {
       // Regime (b): dot-like glyph. Compute signed distance field from the
-      // original mask — negative inside ink, positive outside.
+      // original mask, negative inside the ink and positive outside.
       const bgMask = new Uint8Array(outputMask.length);
       for (let i = 0; i < outputMask.length; i += 1) bgMask[i] = outputMask[i] ? 0 : 1;
       const distFromBg = computeDistFromInk(bgMask, outputWidth, NORMALIZED_HEIGHT);

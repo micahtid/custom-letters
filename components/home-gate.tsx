@@ -63,7 +63,7 @@ const DECORATIONS: Decor[] = [
     lines: []
   },
   {
-    // Envelope A — bottom-right, slight tilt (matches the real envelope)
+    // Envelope A, bottom-right with a slight tilt (matches the real envelope)
     kind: "envelope",
     color: "#f5e9d0",
     flapColor: "#ebd9b5",
@@ -73,7 +73,7 @@ const DECORATIONS: Decor[] = [
     postmarkStyle: { right: "24%", bottom: "14%", transform: "rotate(-12deg)" }
   },
   {
-    // Envelope B — bottom-left mirror
+    // Envelope B, bottom-left mirror
     kind: "envelope",
     color: "#dceaf5",
     flapColor: "#c7dcee",
@@ -98,7 +98,7 @@ const DECORATIONS: Decor[] = [
     lines: []
   },
   {
-    // Envelope C — bottom-right, more tilt
+    // Envelope C, bottom-right with more tilt
     kind: "envelope",
     color: "#f3d6d2",
     flapColor: "#e9c2bc",
@@ -109,7 +109,7 @@ const DECORATIONS: Decor[] = [
     showPostmark: false
   },
   {
-    // Envelope D — bottom-center
+    // Envelope D, bottom-center
     kind: "envelope",
     color: "#f5e9d0",
     flapColor: "#ebd9b5",

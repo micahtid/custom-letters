@@ -30,7 +30,7 @@ function buildCharNode(char: string, glyphs: GlyphMap): HTMLElement {
 
 // Use a transparent IMG (instead of an empty contenteditable=false span) so
 // the browser treats spaces atomically, identical to how glyph images
-// already work — backspace deletes them cleanly and the caret sits at the
+// already work. Backspace deletes them cleanly and the caret sits at the
 // same line-box height instead of growing.
 const TRANSPARENT_PIXEL =
   "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
@@ -397,7 +397,7 @@ export function GlyphEditor({
         return;
       }
 
-      // Explicit deletion handling — operate on the text model rather than
+      // Explicit deletion handling. Operate on the text model rather than
       // letting the browser fight contenteditable atomic elements.
       if (
         type === "deleteContentBackward" ||

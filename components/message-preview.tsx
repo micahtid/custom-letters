@@ -763,8 +763,8 @@ export function MessagePreview({
           const word = lineWords[wordIndex];
 
           if (getWordWidth(word) > segmentWidth) {
-            // Word doesn't fit even on its own — split at character
-            // boundary, place the prefix here, requeue the suffix.
+            // Word doesn't fit even on its own, so split at a character
+            // boundary, place the prefix here, and requeue the suffix.
             const { prefix, suffix } = splitWordToFit(word, segmentWidth);
             words.push({ word: prefix, x: firstSegment.start, y: bandTop });
             if (suffix.length > 0) {

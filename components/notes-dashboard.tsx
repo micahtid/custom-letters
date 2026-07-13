@@ -277,8 +277,8 @@ export function NotesDashboard() {
             <div className="manage-link-info">
               <h2 className="manage-link-title">{managingNote.title}</h2>
               <p className="manage-link-explanation">
-                This letter is published. To make changes, take it down first—the
-                link will stop working, and you can edit and republish from the editor.
+                This letter is published. To make changes, take it down first.
+                The link will stop working, and you can edit and republish from the editor.
               </p>
             </div>
 

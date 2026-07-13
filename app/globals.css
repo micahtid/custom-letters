@@ -293,7 +293,7 @@ h2 {
   margin: 12px 0;
 }
 
-/* Demo video placeholder — width is also capped by viewport height
+/* Demo video placeholder. Width is also capped by viewport height
    (16:9, minus room for the hero text) so hero + video always fit
    on one screen without scrolling */
 .login-video {
@@ -319,7 +319,7 @@ h2 {
   padding: 32px 22px 22px;
 }
 
-/* Lined paper — horizontal ruling */
+/* Lined paper with horizontal ruling */
 .decor-card--letter.style-lined {
   background-image: repeating-linear-gradient(
     to bottom,
@@ -332,7 +332,7 @@ h2 {
   background-repeat: repeat;
 }
 
-/* Grid paper — square grid */
+/* Grid paper with a square grid */
 .decor-card--letter.style-grid {
   background-image:
     repeating-linear-gradient(
@@ -369,7 +369,7 @@ h2 {
   background: var(--env-color, #f5e9d0);
 }
 
-/* The V-flap of the envelope (back view, sealed) — top half. */
+/* The V-flap of the envelope (back view, sealed), top half. */
 .decor-envelope-flap {
   position: absolute;
   top: 0;
@@ -1008,7 +1008,7 @@ h2 {
   border-radius: 6px;
 }
 
-/* Back of envelope — visible behind everything */
+/* Back of envelope, visible behind everything */
 .env__back {
   position: absolute;
   inset: 0;
@@ -1016,7 +1016,7 @@ h2 {
   z-index: 0;
 }
 
-/* Letter inside envelope — slides up smoothly */
+/* Letter inside envelope, slides up smoothly */
 .env__letter {
   position: absolute;
   inset: 5%;
@@ -1026,7 +1026,7 @@ h2 {
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), z-index 0.6s;
 }
 
-/* Pocket — front of envelope with V-cutout at top */
+/* Pocket, the front of the envelope with a V cutout at top */
 .env__pocket {
   position: absolute;
   inset: 0;
@@ -1035,7 +1035,7 @@ h2 {
   z-index: 3;
 }
 
-/* Flap — triangle pointing down, hinged at top, opens via rotateX */
+/* Flap, a triangle pointing down, hinged at top, opens via rotateX */
 .env__flap {
   position: absolute;
   inset: 0;
@@ -1047,7 +1047,7 @@ h2 {
   transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), z-index 0.55s;
 }
 
-/* Postcard stickers — sit on the pocket below the flap */
+/* Postcard stickers that sit on the pocket below the flap */
 .env__stamp {
   position: absolute;
   bottom: 14%;
@@ -1977,7 +1977,7 @@ h2 {
   flex-wrap: wrap;
 }
 
-/* Locked editor while a note is live — readers see, but no edits */
+/* Locked editor while a note is live. Readers can see it but not edit */
 .direct-editor-container.is-locked {
   pointer-events: none;
   opacity: 0.6;
@@ -1990,7 +1990,7 @@ h2 {
   opacity: 0.75;
 }
 
-/* Manage Published Letter modal — opened from the dashboard */
+/* Manage Published Letter modal, opened from the dashboard */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -2053,7 +2053,7 @@ h2 {
   flex-shrink: 0;
 }
 
-/* Square icon-only button — self-contained so cascade from other button
+/* Square icon-only button. This is self-contained so the cascade from other button
    classes can't shift the icon off-center. */
 .icon-button {
   display: inline-flex;
@@ -2216,7 +2216,7 @@ h2 {
 }
 
 /* ============================================================
-   MOBILE RESPONSIVE — consolidated fixes
+   MOBILE RESPONSIVE, consolidated fixes
    ============================================================ */
 
 /* Notes grid: smaller min-column so two cards fit on tablets */
@@ -2226,7 +2226,7 @@ h2 {
   }
 }
 
-/* Login decorations — hide mid-screen cards on tablet to stop
+/* Login decorations. Hide mid-screen cards on tablet to stop
    them overlapping the centered content */
 @media (max-width: 768px) {
   /* mid-left envelope (#3) + lower-left letter (#5) */
@@ -2236,7 +2236,7 @@ h2 {
   }
 }
 
-/* On mobile, hide all decorations — content is the focus */
+/* On mobile, hide all decorations so the content is the focus */
 @media (max-width: 640px) {
   .login-decor-layer {
     display: none;
@@ -2266,7 +2266,7 @@ h2 {
   }
 }
 
-/* Publish preview order already set at 768px — ensure controls
+/* Publish preview order already set at 768px. Ensure controls
    don't exceed viewport on very small screens */
 @media (max-width: 480px) {
   .publish-layout {

@@ -4,8 +4,8 @@ import {
   nextjsMiddlewareRedirect
 } from "@convex-dev/auth/nextjs/server";
 
-// Routes that require sign-in. The home page (/) is always accessible —
-// it renders the sign-in card itself when the user isn't authenticated.
+// Routes that require sign-in. The home page (/) is always accessible, and it
+// renders the sign-in card itself when the user is not authenticated.
 // `/l/...` is the public letter view and stays open. `/api/auth` is handled
 // by Convex auth's proxy and must not be matched here.
 const isProtectedRoute = createRouteMatcher([

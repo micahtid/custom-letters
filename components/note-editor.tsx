@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { ArrowBigLeft } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import type { GlyphMap, NoteId } from "@/lib/types";
+import type { NoteId } from "@/lib/types";
+import { buildGlyphMap } from "@/lib/glyphs";
 import { GlyphEditor } from "@/components/glyph-editor";
 
 type NoteEditorProps = {
@@ -47,17 +48,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     return note.title !== draftTitle || note.message !== draftMessage;
   }, [draftMessage, draftTitle, note]);
 
-  const glyphMap: GlyphMap = useMemo(() => {
-    const map: GlyphMap = {};
-    for (const g of glyphs ?? []) {
-      map[g.character] = {
-        character: g.character,
-        dataUrl: g.dataUrl,
-        updatedAt: g.updatedAt
-      };
-    }
-    return map;
-  }, [glyphs]);
+  const glyphMap = useMemo(() => buildGlyphMap(glyphs), [glyphs]);
 
   const saveNote = async () => {
     if (!note) return;
